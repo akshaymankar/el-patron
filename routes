@@ -1,4 +1,2 @@
-/                    HomeR        GET
-/add/#Int/#Int       AddR         GET
 /pools               PoolsR       GET
 /locks               LocksR       GET
