@@ -6,6 +6,7 @@ dependencies:
 - yesod-core
 - directory
 - containers
+- blaze-markup
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
