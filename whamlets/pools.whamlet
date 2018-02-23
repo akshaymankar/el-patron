@@ -1,0 +1,5 @@
+$newline always
+<ul>
+  $forall pool <- pools
+    <li> #{pool}
+

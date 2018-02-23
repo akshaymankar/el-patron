@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
-module Home where
+module Handler.Home where
 
 import Lostation
 import Yesod.Core

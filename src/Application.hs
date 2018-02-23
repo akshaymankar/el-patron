@@ -8,7 +8,9 @@ module Application where
 import Lostation
 import Yesod.Core
 
-import Add
-import Home
+import Handler.Add
+import Handler.Home
+import Handler.Locks
+import Handler.Pools
 
 mkYesodDispatch "App" resourcesApp
