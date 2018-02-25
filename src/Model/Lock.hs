@@ -1,3 +1,4 @@
+{-# LANGUAGE ImplicitParams #-}
 module Model.Lock where
 
 import Data.List as L
@@ -13,18 +14,18 @@ data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
 instance ToMarkup LockState where
   toMarkup x = toMarkup $ show x
 
-getAllLocks :: FilePath -> IO (Map Pool [Lock])
-getAllLocks locksPath = do
-  pools <- listPools locksPath
-  lockss <- sequence $ fmap (readLocks locksPath) pools
+getAllLocks :: (?locksPath :: FilePath) => IO (Map Pool [Lock])
+getAllLocks = do
+  pools <- listPools ?locksPath
+  lockss <- sequence $ fmap readLocks pools
   return $ fromList (zip pools lockss)
 
-readLocks :: FilePath -> Pool -> IO [Lock]
-readLocks locksPath pool = do
-  claimedLocks <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/claimed") Claimed
-  unclaimedLocks <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/unclaimed") Unclaimed
-  recyclingLocks <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") Recycling
-  tobeRecycledLocks <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/unclaimed") WaitingToRecycle
+readLocks :: (?locksPath :: FilePath) => Pool -> IO [Lock]
+readLocks pool = do
+  claimedLocks      <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "/claimed") Claimed
+  unclaimedLocks    <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "/unclaimed") Unclaimed
+  recyclingLocks    <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") Recycling
+  tobeRecycledLocks <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "-lifecycle/unclaimed") WaitingToRecycle
   return $ claimedLocks ++ unclaimedLocks ++ recyclingLocks ++ tobeRecycledLocks
 
 readLocksFromDir :: FilePath -> LockState -> IO [Lock]
@@ -36,3 +37,11 @@ readLocksFromDir dir state = do
   else
     return []
 
+claim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
+claim pool lockName = do
+  let lockPath = ?locksPath ++ "/" ++ pool ++ "/unclaimed/" ++ lockName
+      claimedPath = ?locksPath ++ "/" ++ pool ++ "/claimed/" ++ lockName in do
+      pathExists <- doesPathExist lockPath
+      if pathExists then
+         renameFile lockPath claimedPath
+      else error "Lock not found in unclaimed"
