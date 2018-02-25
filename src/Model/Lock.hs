@@ -8,7 +8,7 @@ import Data.Text (pack)
 import Git.Types
 import Git.CmdLine
 import Model.Pool
-import Shelly (shelly)
+import Shelly (shelly, errExit)
 import System.Directory
 import Text.Blaze
 
@@ -52,8 +52,10 @@ moveLock pool lockName destinationPool from to =
       pathExists <- doesPathExist lockPath
       renameFile lockPath destinationPath
       repo <- openCliRepository repoOptions
-      _ <- shelly $ git repo [ "add", "-A", "."]
-      _ <- shelly $ git repo [ "commit", "-m", commitMsg]
+      _ <- shelly $ errExit True $ git repo ["add", "-A", "."]
+      _ <- shelly $ errExit True $ git repo ["commit", "-m", commitMsg]
+      _ <- shelly $ errExit True $ git repo ["pull"]
+      _ <- shelly $ errExit True $ git repo ["push"]
       return ()
 
 claim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
