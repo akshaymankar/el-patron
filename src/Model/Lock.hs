@@ -1,9 +1,14 @@
-{-# LANGUAGE ImplicitParams #-}
+{-# LANGUAGE ImplicitParams    #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Model.Lock where
 
 import Data.List as L
 import Data.Map as M
+import Data.Text (pack)
+import Git.Types
+import Git.CmdLine
 import Model.Pool
+import Shelly (shelly)
 import System.Directory
 import Text.Blaze
 
@@ -39,10 +44,17 @@ readLocksFromDir dir state = do
 
 moveLock :: (?locksPath :: FilePath) =>  Pool -> String -> Pool -> String -> String -> IO ()
 moveLock pool lockName destinationPool from to =
-  let lockPath = ?locksPath ++ "/" ++ pool ++ "/" ++ from ++ "/" ++ lockName
+  let repoOptions = defaultRepositoryOptions {repoPath = ?locksPath ++ "/.git",
+                                              repoWorkingDir = Just ?locksPath}
+      commitMsg = pack $ "Move " ++ pool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
+      lockPath = ?locksPath ++ "/" ++ pool ++ "/" ++ from ++ "/" ++ lockName
       destinationPath = ?locksPath ++ "/" ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName in do
       pathExists <- doesPathExist lockPath
       renameFile lockPath destinationPath
+      repo <- openCliRepository repoOptions
+      _ <- shelly $ git repo [ "add", "-A", "."]
+      _ <- shelly $ git repo [ "commit", "-m", commitMsg]
+      return ()
 
 claim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
 claim pool lockName = moveLock pool lockName pool "unclaimed" "claimed"
