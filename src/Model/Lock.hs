@@ -37,11 +37,18 @@ readLocksFromDir dir state = do
   else
     return []
 
-claim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
-claim pool lockName = do
-  let lockPath = ?locksPath ++ "/" ++ pool ++ "/unclaimed/" ++ lockName
-      claimedPath = ?locksPath ++ "/" ++ pool ++ "/claimed/" ++ lockName in do
+moveLock :: (?locksPath :: FilePath) =>  Pool -> String -> Pool -> String -> String -> IO ()
+moveLock pool lockName destinationPool from to =
+  let lockPath = ?locksPath ++ "/" ++ pool ++ "/" ++ from ++ "/" ++ lockName
+      destinationPath = ?locksPath ++ "/" ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName in do
       pathExists <- doesPathExist lockPath
-      if pathExists then
-         renameFile lockPath claimedPath
-      else error "Lock not found in unclaimed"
+      renameFile lockPath destinationPath
+
+claim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
+claim pool lockName = moveLock pool lockName pool "unclaimed" "claimed"
+
+unclaim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
+unclaim pool lockName = moveLock pool lockName pool "claimed" "unclaimed"
+
+recycle :: (?locksPath :: FilePath) => Pool -> String -> IO ()
+recycle pool lockName = moveLock pool lockName (pool ++ "-lifecycle" ) "claimed" "unclaimed"

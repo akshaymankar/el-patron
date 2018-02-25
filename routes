@@ -1,3 +1,5 @@
-/pools                              PoolsR        GET
-/locks                              LocksR        GET
-/pools/#String/locks/#String/claim  ClaimLockR    POST
+/pools                                PoolsR        GET
+/locks                                LocksR        GET
+/pools/#String/locks/#String/claim    ClaimLockR    POST
+/pools/#String/locks/#String/unclaim  UnclaimLockR  POST
+/pools/#String/locks/#String/recycle  RecycleLockR  POST

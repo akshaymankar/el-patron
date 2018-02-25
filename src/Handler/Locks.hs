@@ -26,3 +26,17 @@ postClaimLockR pool lock = let ?locksPath = locksPath in
   setTitle "move the file"
   _ <- lift $ claim pool lock
   [whamlet|<p>Locks moved|]
+
+postUnclaimLockR :: Pool -> String -> Handler Html
+postUnclaimLockR pool lock = let ?locksPath = locksPath in
+  defaultLayout $ do
+  setTitle "move the file"
+  _ <- lift $ unclaim pool lock
+  [whamlet|<p>Locks moved|]
+
+postRecycleLockR :: Pool -> String -> Handler Html
+postRecycleLockR pool lock = let ?locksPath = locksPath in
+  defaultLayout $ do
+  setTitle "move the file"
+  _ <- lift $ recycle pool lock
+  [whamlet|<p>Locks moved|]
