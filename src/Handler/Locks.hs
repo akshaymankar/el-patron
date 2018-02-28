@@ -8,10 +8,8 @@ import Data.Map
 import Lostation
 import Model.Lock
 import Model.Pool
+import Settings
 import Yesod.Core
-
---locksPath = "/Users/axeman/work/kubo/kubo-locks"
-locksPath = "/Users/axeman/work/test-locks"
 
 getLocksR :: Handler Html
 getLocksR = let ?locksPath = locksPath in

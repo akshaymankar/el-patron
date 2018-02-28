@@ -9,6 +9,7 @@ import Git.Types
 import Git.CmdLine
 import Model.Pool
 import Shelly (shelly, errExit)
+import Settings
 import System.Directory
 import Text.Blaze
 
@@ -44,18 +45,15 @@ readLocksFromDir dir state = do
 
 moveLock :: (?locksPath :: FilePath) =>  Pool -> String -> Pool -> String -> String -> IO ()
 moveLock pool lockName destinationPool from to =
-  let repoOptions = defaultRepositoryOptions {repoPath = ?locksPath ++ "/.git",
-                                              repoWorkingDir = Just ?locksPath}
-      commitMsg = pack $ "Move " ++ pool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
+  let commitMsg = pack $ "Move " ++ pool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
       lockPath = ?locksPath ++ "/" ++ pool ++ "/" ++ from ++ "/" ++ lockName
       destinationPath = ?locksPath ++ "/" ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName in do
       pathExists <- doesPathExist lockPath
       renameFile lockPath destinationPath
-      repo <- openCliRepository repoOptions
-      _ <- shelly $ errExit True $ git repo ["add", "-A", "."]
-      _ <- shelly $ errExit True $ git repo ["commit", "-m", commitMsg]
-      _ <- shelly $ errExit True $ git repo ["pull"]
-      _ <- shelly $ errExit True $ git repo ["push"]
+      _ <- execGit ["add", "-A", "."]
+      _ <- execGit ["commit", "-m", commitMsg]
+      _ <- execGit ["pull"]
+      _ <- execGit ["push"]
       return ()
 
 claim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
