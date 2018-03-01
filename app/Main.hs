@@ -3,4 +3,6 @@ import Lostation
 import Yesod.Core
 
 main :: IO ()
-main = warp 3000 App
+main = do
+  cloneRepository
+  warp 3000 App
