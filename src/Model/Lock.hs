@@ -52,7 +52,7 @@ moveLock pool lockName destinationPool from to =
       renameFile lockPath destinationPath
       _ <- execGit ["add", "-A", "."]
       _ <- execGit ["commit", "-m", commitMsg]
-      _ <- execGit ["pull"]
+      _ <- execGit ["pull", "--rebase"]
       _ <- execGit ["push"]
       return ()
 
