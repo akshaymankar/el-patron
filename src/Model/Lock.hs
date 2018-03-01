@@ -43,6 +43,7 @@ readLocksFromDir dir state = do
   else
     return []
 
+-- TODO: Handle concurrent access to same git repo
 moveLock :: (?locksPath :: FilePath) =>  Pool -> String -> Pool -> String -> String -> IO ()
 moveLock pool lockName destinationPool from to =
   let commitMsg = pack $ "Move " ++ pool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
