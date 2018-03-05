@@ -1,6 +1,0 @@
-$newline always
-  $forall (pool, locks) <- toList groupedLocks
-    <p> #{pool}
-    <ul>
-      $forall lock <- locks
-        <li> #{name lock} - #{state lock}

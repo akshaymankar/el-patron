@@ -1,5 +1,6 @@
 {-# LANGUAGE ImplicitParams    #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Model.Lock where
 
 import Data.List as L
@@ -12,6 +13,7 @@ import Shelly (shelly, errExit)
 import Settings
 import System.Directory
 import Text.Blaze
+import Data.Aeson
 
 data Lock = Lock { name :: String, path :: String, state :: LockState }
 data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
@@ -19,6 +21,12 @@ data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
 
 instance ToMarkup LockState where
   toMarkup x = toMarkup $ show x
+
+instance ToJSON Lock where
+  toJSON Lock{..} = object
+    [ "name" .= name
+    , "state" .= show state
+    ]
 
 getAllLocks :: (?locksPath :: FilePath) => IO (Map Pool [Lock])
 getAllLocks = do

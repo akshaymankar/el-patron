@@ -11,12 +11,11 @@ import Model.Pool
 import Settings
 import Yesod.Core
 
-getLocksR :: Handler Html
+getLocksR :: Handler Value
 getLocksR = let ?locksPath = locksPath in
-  defaultLayout $ do
-    setTitle "Locks"
-    groupedLocks <- lift getAllLocks
-    $(whamletFile "whamlets/locks.whamlet")
+                do
+                  groupedLocks <- lift getAllLocks
+                  returnJson $ groupedLocks
 
 postClaimLockR :: Pool -> String -> Handler Html
 postClaimLockR pool lock = let ?locksPath = locksPath in

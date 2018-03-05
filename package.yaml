@@ -2,15 +2,16 @@ name:    services-gaffer
 version: "0.0.0"
 
 dependencies:
+- aeson
 - base
-- yesod-core
-- directory
-- containers
 - blaze-markup
-- gitlib-cmdline == 3.1.0.2
+- containers
+- directory
 - gitlib
-- text
+- gitlib-cmdline == 3.1.0.2
 - shelly
+- text
+- yesod-core
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
