@@ -1,5 +1,6 @@
 import Debug exposing (crash)
 import Html exposing (..)
+import Html.Attributes exposing (class)
 import Http
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -78,18 +79,17 @@ subscriptions model =
 -- VIEW
 
 lockView : Lock -> Html Msg
-lockView lock = li [] [text lock.name]
+lockView lock = p [] [text (lock.name ++ " - " ++ (toString lock.state)) ]
 
 locksView : List Lock -> Html Msg
-locksView locks = ul [] (List.map lockView locks)
+locksView locks = div [] (List.map lockView locks)
 
 poolView : Pool -> List Lock -> Html Msg
-poolView pool locks = li [] [text pool, locksView locks]
+poolView pool locks = div [class "item"] [text pool, locksView locks]
 
-poolsView : Model -> Html Msg
-poolsView model = ul [] (Dict.values (Dict.map poolView model))
+poolsView : Model -> List (Html Msg)
+poolsView model = Dict.values (Dict.map poolView model)
 
 view : Model -> Html Msg
 view model =
-    div []
-        [poolsView model]
+    div [class "masonry"] (poolsView model)
