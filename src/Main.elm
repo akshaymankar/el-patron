@@ -1,8 +1,11 @@
-import Html exposing (..)
 import Debug exposing (crash)
+import Html exposing (..)
+import Http
+import Json.Decode exposing (..)
+import Json.Decode.Pipeline exposing (..)
+import Dict exposing (Dict)
 --import Html.Attributes exposing (..)
 --import Html.Events exposing (onClick)
-
 
 main : Program Never Model Msg
 main =
@@ -16,31 +19,55 @@ main =
 -- MODEL
 type LockState = Unclaimed | Claimed | Recycling | WaitingToRecycle
 type alias Lock = {name: String, state: LockState}
-type alias Pool = {name: String, locks: List Lock}
+type alias Pool = String
 
-type alias Model =
-    {pools: List Pool}
+type alias Model = Dict Pool (List Lock)
 
 initialModel : Model
 initialModel =
-    {pools = [{name = "pool1", locks = [{name ="Lock1", state = Claimed}]}]}
+  Dict.singleton "pool1" [{name ="Lock1", state = Claimed}]
 
 init : ( Model, Cmd Msg )
 init =
-    ( initialModel, Cmd.none )
-
+    (initialModel, updateLocks)
 
 -- UPDATE
 
 type Msg
-    = NoOp
+   = NoOp | NewLocks (Result Http.Error Model)
 
+decodeLockState : Decoder LockState
+decodeLockState = string
+  |> andThen (\str ->
+       case str of
+         "Claimed"          -> succeed Claimed
+         "Unclaimed"        -> succeed Unclaimed
+         "Recycling"        -> succeed Recycling
+         "WaitingToRecycle" -> succeed WaitingToRecycle
+         somethingElse      -> fail <| "Unknown lock state: " ++ somethingElse
+       )
+
+decodeLock : Decoder Lock
+decodeLock =
+  decode Lock
+  |> required "name" string
+  |> required "state" decodeLockState
+
+decodeModel : Decoder Model
+decodeModel = dict <| list decodeLock
+
+updateLocks : Cmd Msg
+updateLocks = Http.send NewLocks <| Http.get "http://localhost:3000/locks" decodeModel
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            model ! []
+        NewLocks (Ok newModel) ->
+            newModel ! []
+        NewLocks (Err _) ->
+            crash "Failed to get locks!"
 
 -- SUBSCRIPTIONS
 
@@ -56,11 +83,11 @@ lockView lock = li [] [text lock.name]
 locksView : List Lock -> Html Msg
 locksView locks = ul [] (List.map lockView locks)
 
-poolView : Pool -> Html Msg
-poolView x = li [] [text x.name, locksView x.locks]
+poolView : Pool -> List Lock -> Html Msg
+poolView pool locks = li [] [text pool, locksView locks]
 
 poolsView : Model -> Html Msg
-poolsView model = ul [] (List.map poolView model.pools)
+poolsView model = ul [] (Dict.values (Dict.map poolView model))
 
 view : Model -> Html Msg
 view model =
