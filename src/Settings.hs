@@ -11,8 +11,7 @@ locksPath = tmpDir ++ "/locks"
 gitDir = tmpDir ++ "/git"
 locksRepoFile = tmpDir ++ "/locks-repo-file"
 
-locksRepoRemote :: Text
-locksRepoRemote = "git@github.com:akshaymankar/test-locks.git"
+data Settings = Settings { lockRepoRemote :: Text }
 
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,
                                          repoWorkingDir = Just $ locksPath }

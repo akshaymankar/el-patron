@@ -9,6 +9,7 @@ dependencies:
 - directory
 - gitlib
 - gitlib-cmdline == 3.1.0.2
+- optparse-applicative
 - shelly
 - text
 - wai-cors
