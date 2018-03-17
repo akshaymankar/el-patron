@@ -1,6 +1,6 @@
 import Debug exposing (crash)
 import Html exposing (..)
-import Html.Attributes exposing (class, classList)
+import Html.Attributes exposing (class, classList, href)
 import Http
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
@@ -8,9 +8,9 @@ import Dict exposing (Dict)
 --import Html.Attributes exposing (..)
 --import Html.Events exposing (onClick)
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , view = view
         , update = update
@@ -19,23 +19,32 @@ main =
 
 -- MODEL
 type LockState = Unclaimed | Claimed | Recycling | WaitingToRecycle
+type LockAction = Claim Pool Lock | Recycle Pool Lock | Unclaim Pool Lock | Nothing
 type alias Lock = {name: String, state: LockState}
 type alias Pool = String
+type alias Pools = Dict Pool (List Lock)
+type alias Flags = { backendUrl : String }
 
-type alias Model = Dict Pool (List Lock)
+type alias Model = { flags : Flags, pools : Pools}
 
 initialModel : Model
 initialModel =
-  Dict.singleton "pool1" [{name ="Lock1", state = Claimed}]
+  {
+    flags = {backendUrl = "http://localhost:1000"},
+    pools = Dict.singleton "pool1" [{name ="Lock1", state = Claimed}]
+  }
 
-init : ( Model, Cmd Msg )
-init =
-    (initialModel, updateLocks)
+init : Flags -> ( Model, Cmd Msg )
+init f = let model = { initialModel | flags = f } in
+  (model, updateLocks model)
 
 -- UPDATE
 
+locksUrl : Flags -> String
+locksUrl f = f.backendUrl ++ "/locks"
+
 type Msg
-   = NoOp | NewLocks (Result Http.Error Model)
+   = NoOp | NewLocks (Result Http.Error Pools)
 
 decodeLockState : Decoder LockState
 decodeLockState = string
@@ -54,19 +63,19 @@ decodeLock =
   |> required "name" string
   |> required "state" decodeLockState
 
-decodeModel : Decoder Model
+decodeModel : Decoder Pools
 decodeModel = dict <| list decodeLock
 
-updateLocks : Cmd Msg
-updateLocks = Http.send NewLocks <| Http.get "http://localhost:3000/locks" decodeModel
+updateLocks : Model -> Cmd Msg
+updateLocks oldModel = Http.send NewLocks <| Http.get (locksUrl oldModel.flags) decodeModel
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
             model ! []
-        NewLocks (Ok newModel) ->
-            newModel ! []
+        NewLocks (Ok newLocks) ->
+            {model | pools = newLocks} ! []
         NewLocks (Err _) ->
             crash "Failed to get locks!"
 
@@ -81,17 +90,52 @@ subscriptions model =
 lockClasses : Lock -> Attribute msg
 lockClasses lock = classList [("lock", True), ((toString lock.state),True)]
 
-lockView : Lock -> Html Msg
-lockView lock = p [lockClasses lock] [text (lock.name ++ " - " ++ (toString lock.state)) ]
+lockText : Lock -> Html msg
+lockText lock = text (lock.name ++ " - " ++ (toString lock.state))
 
-locksView : List Lock -> Html Msg
-locksView locks = div [] (List.map lockView locks)
+lockAction : Pool -> Lock -> LockAction
+lockAction pool lock = case lock.state of
+  Claimed -> Recycle  pool lock
+  Unclaimed -> Claim pool lock
+  WaitingToRecycle -> Nothing
+  Recycling -> Unclaim (pool ++ "-lifecycle") lock
 
-poolView : Pool -> List Lock -> Html Msg
-poolView pool locks = div [class "item"] [p [class "pool"] [text pool], locksView locks]
+toSymbol : LockAction -> String
+toSymbol a = case a of
+  (Claim pool lock) -> "Claim"
+  (Unclaim pool lock) -> "Unclaime"
+  (Recycle pool lock) -> "Recycle"
+  Nothing -> ""
+
+buildActionUrl : String -> Flags -> Pool -> Lock -> String
+buildActionUrl action f pool lock = f.backendUrl ++ "/pools/" ++ pool ++ "/locks/" ++ lock.name ++ "/" ++ action
+
+actionUrl : Flags -> LockAction -> String
+actionUrl f action = case action of
+  (Claim pool lock) -> buildActionUrl "claim" f pool lock
+  (Unclaim pool lock) -> buildActionUrl "unclaim" f pool lock
+  (Recycle pool lock) -> buildActionUrl "recycle" f pool lock
+  Nothing -> "#"
+
+lockActionButton : Flags -> Pool -> Lock -> Html msg
+lockActionButton f pool lock =
+  let action = lockAction pool lock in
+    a [href (actionUrl f action)] [text (toSymbol action)]
+
+lockView : Flags -> Pool -> Lock -> Html Msg
+lockView f pool lock = p [lockClasses lock] [
+  span [] [lockText lock],
+  span [] [text " - " ],
+  span [] [lockActionButton f pool lock]]
+
+locksView : Flags -> Pool -> List Lock -> Html Msg
+locksView f pool locks = div [] (List.map (lockView f pool) locks)
+
+poolView : Flags -> Pool -> List Lock -> Html Msg
+poolView f pool locks = div [class "item"] [p [class "pool"] [text pool], (locksView f) pool locks]
 
 poolsView : Model -> List (Html Msg)
-poolsView model = Dict.values (Dict.map poolView model)
+poolsView model = Dict.values (Dict.map (poolView model.flags) model.pools)
 
 view : Model -> Html Msg
 view model =
