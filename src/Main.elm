@@ -103,7 +103,7 @@ lockAction pool lock = case lock.state of
 toSymbol : LockAction -> String
 toSymbol a = case a of
   (Claim pool lock) -> "Claim"
-  (Unclaim pool lock) -> "Unclaime"
+  (Unclaim pool lock) -> "Unclaim"
   (Recycle pool lock) -> "Recycle"
   Nothing -> ""
 
