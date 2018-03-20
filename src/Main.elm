@@ -6,7 +6,7 @@ import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 import Dict exposing (Dict)
 --import Html.Attributes exposing (..)
---import Html.Events exposing (onClick)
+import Html.Events exposing (onClick)
 
 main : Program Flags Model Msg
 main =
@@ -44,7 +44,10 @@ locksUrl : Flags -> String
 locksUrl f = f.backendUrl ++ "/locks"
 
 type Msg
-   = NoOp | NewLocks (Result Http.Error Pools)
+   = NoOp
+   | NewLocks (Result Http.Error Pools)
+   | PerformLockAction LockAction
+   | LockActionDone (Result Http.Error (List String))
 
 decodeLockState : Decoder LockState
 decodeLockState = string
@@ -69,6 +72,9 @@ decodeModel = dict <| list decodeLock
 updateLocks : Model -> Cmd Msg
 updateLocks oldModel = Http.send NewLocks <| Http.get (locksUrl oldModel.flags) decodeModel
 
+performLockAction : Flags -> LockAction -> Cmd Msg
+performLockAction f a = Http.send LockActionDone <| Http.post (actionUrl f a) Http.emptyBody (list string)
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -78,6 +84,12 @@ update msg model =
             {model | pools = newLocks} ! []
         NewLocks (Err _) ->
             crash "Failed to get locks!"
+        PerformLockAction a ->
+            (model, performLockAction model.flags a)
+        LockActionDone (Ok _) ->
+            (model, updateLocks model)
+        LockActionDone (Err _) ->
+            crash "Failed to update locks!"
 
 -- SUBSCRIPTIONS
 
@@ -117,10 +129,10 @@ actionUrl f action = case action of
   (Recycle pool lock) -> buildActionUrl "recycle" f pool lock
   Nothing -> "#"
 
-lockActionButton : Flags -> Pool -> Lock -> Html msg
+lockActionButton : Flags -> Pool -> Lock -> Html Msg
 lockActionButton f pool lock =
   let action = lockAction pool lock in
-    a [href (actionUrl f action)] [text (toSymbol action)]
+    a [href "#", onClick (PerformLockAction action) ] [text (toSymbol action)]
 
 lockView : Flags -> Pool -> Lock -> Html Msg
 lockView f pool lock = p [lockClasses lock] [
