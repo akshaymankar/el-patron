@@ -25,13 +25,14 @@ type alias Pool = String
 type alias Pools = Dict Pool (List Lock)
 type alias Flags = { backendUrl : String }
 
-type alias Model = { flags : Flags, pools : Pools}
+type alias Model = { flags : Flags, pools : Pools, loading: Bool}
 
 initialModel : Model
 initialModel =
   {
     flags = {backendUrl = "http://localhost:1000"},
-    pools = Dict.singleton "pool1" [{name ="Lock1", state = Claimed}]
+    pools = Dict.singleton "pool1" [{name ="Lock1", state = Claimed}],
+    loading = True
   }
 
 init : Flags -> ( Model, Cmd Msg )
@@ -81,11 +82,11 @@ update msg model =
         NoOp ->
             model ! []
         NewLocks (Ok newLocks) ->
-            {model | pools = newLocks} ! []
+            {model | pools = newLocks, loading = False} ! []
         NewLocks (Err _) ->
             crash "Failed to get locks!"
         PerformLockAction a ->
-            (model, performLockAction model.flags a)
+            ({model | loading = True}, performLockAction model.flags a)
         LockActionDone (Ok _) ->
             (model, updateLocks model)
         LockActionDone (Err _) ->
@@ -151,4 +152,8 @@ poolsView model = Dict.values (Dict.map (poolView model.flags) model.pools)
 
 view : Model -> Html Msg
 view model =
-    div [class "masonry"] (poolsView model)
+    div [] [
+      div [classList [("loader-wrapper", True), ("hidden", not model.loading)]]
+          [div [class "lds-ring"] [div [] []]],
+      div [class "masonry"] (poolsView model)
+    ]
