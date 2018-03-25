@@ -1,20 +1,33 @@
+{-# LANGUAGE RecordWildCards #-}
 import Application (makeApplication, cloneRepository) -- for YesodDispatch instance
+import qualified Data.Attoparsec.Text as A
 import Data.Semigroup ((<>))
 import Data.Text (pack)
 import Lostation
 import Network.Wai.Handler.Warp (run)
 import Options.Applicative
+import Options.Applicative.Types
 import Settings
 import Yesod.Core
 
 data Options = Options { remote :: String
                        , githubClientID :: String
                        , githubClientSecret :: String
-                       , frontend :: String}
+                       , frontend :: String
+                       , authorizedTeams :: [GithubTeam]
+                       }
   deriving Show
 
 makeSettings :: Options -> Settings
-makeSettings (Options repo gId gSecret frontend) = Settings (pack repo) (GithubOAuthKeys (pack gId) (pack gSecret)) frontend
+makeSettings Options{..} =
+  Settings (pack remote)
+           (GithubOAuthKeys (pack githubClientID)
+           (pack githubClientSecret))
+           frontend
+           []
+
+attoReadM :: A.Parser a -> ReadM a
+attoReadM p = eitherReader (A.parseOnly p . pack)
 
 options :: Parser Options
 options = Options
