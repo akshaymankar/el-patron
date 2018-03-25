@@ -8,6 +8,9 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
+import Models exposing (..)
+import Navigation exposing (..)
+import Urls exposing (..)
 
 
 main : Program Flags Model Msg
@@ -18,52 +21,6 @@ main =
         , update = update
         , subscriptions = subscriptions
         }
-
-
-
--- MODEL
-
-
-type LockState
-    = Unclaimed
-    | Claimed
-    | Recycling
-    | WaitingToRecycle
-
-
-type LockAction
-    = Claim Pool Lock
-    | Recycle Pool Lock
-    | Unclaim Pool Lock
-    | Nothing
-
-
-type alias Lock =
-    { name : String, state : LockState }
-
-
-type alias Pool =
-    String
-
-
-type alias Pools =
-    Dict Pool (List Lock)
-
-
-type alias Flags =
-    { backendUrl : String }
-
-
-type alias Model =
-    { flags : Flags, pools : Pools, loading : Bool }
-
-
-initialModel : Model
-initialModel =
-    { flags = { backendUrl = "http://localhost:1000" }
-    , pools = Dict.singleton "pool1" [ { name = "Lock1", state = Claimed } ]
-    , loading = True
-    }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -77,11 +34,6 @@ init f =
 
 
 -- UPDATE
-
-
-locksUrl : Flags -> String
-locksUrl f =
-    f.backendUrl ++ "/locks"
 
 
 type Msg
@@ -126,9 +78,22 @@ decodeModel =
     dict <| list decodeLock
 
 
+getWithCreds : String -> Decoder a -> Http.Request a
+getWithCreds url decoder =
+    Http.request
+        { method = "Get"
+        , headers = []
+        , url = url
+        , body = Http.emptyBody
+        , expect = Http.expectJson decoder
+        , timeout = Nothing
+        , withCredentials = True
+        }
+
+
 updateLocks : Model -> Cmd Msg
 updateLocks oldModel =
-    Http.send NewLocks <| Http.get (locksUrl oldModel.flags) decodeModel
+    Http.send NewLocks <| getWithCreds (locksUrl oldModel.flags) decodeModel
 
 
 performLockAction : Flags -> LockAction -> Cmd Msg
@@ -145,8 +110,14 @@ update msg model =
         NewLocks (Ok newLocks) ->
             { model | pools = newLocks, loading = False } ! []
 
-        NewLocks (Err _) ->
-            crash "Failed to get locks!"
+        NewLocks (Err (Http.BadStatus r)) ->
+            if r.status.code == 403 then
+                ( model, load (authUrl model.flags) )
+            else
+                crash ("Failed to get locks with code: " ++ r.status.message)
+
+        NewLocks (Err x) ->
+            crash ("Failed to get locks!" ++ toString x)
 
         PerformLockAction a ->
             ( { model | loading = True }, performLockAction model.flags a )
@@ -191,7 +162,7 @@ lockAction pool lock =
             Claim pool lock
 
         WaitingToRecycle ->
-            Nothing
+            NoAction
 
         Recycling ->
             Unclaim (pool ++ "-lifecycle") lock
@@ -209,29 +180,8 @@ toSymbol a =
         Recycle pool lock ->
             "Recycle"
 
-        Nothing ->
+        NoAction ->
             ""
-
-
-buildActionUrl : String -> Flags -> Pool -> Lock -> String
-buildActionUrl action f pool lock =
-    f.backendUrl ++ "/pools/" ++ pool ++ "/locks/" ++ lock.name ++ "/" ++ action
-
-
-actionUrl : Flags -> LockAction -> String
-actionUrl f action =
-    case action of
-        Claim pool lock ->
-            buildActionUrl "claim" f pool lock
-
-        Unclaim pool lock ->
-            buildActionUrl "unclaim" f pool lock
-
-        Recycle pool lock ->
-            buildActionUrl "recycle" f pool lock
-
-        Nothing ->
-            "#"
 
 
 lockActionButton : Flags -> Pool -> Lock -> Html Msg
