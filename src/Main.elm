@@ -82,13 +82,22 @@ getWithCreds : String -> Decoder a -> Http.Request a
 getWithCreds url decoder =
     Http.request
         { method = "Get"
-        , headers = []
+        , headers = [ Http.header "Accept" "application/json" ]
         , url = url
         , body = Http.emptyBody
         , expect = Http.expectJson decoder
         , timeout = Nothing
         , withCredentials = True
         }
+
+
+type ErrorMessage
+    = ErrorMessage String
+
+
+decodeErrorMessage : Decoder ErrorMessage
+decodeErrorMessage =
+    decode ErrorMessage |> required "message" string
 
 
 updateLocks : Model -> Cmd Msg
@@ -112,7 +121,15 @@ update msg model =
 
         NewLocks (Err (Http.BadStatus r)) ->
             if r.status.code == 403 then
-                ( model, load (authUrl model.flags) )
+                case decodeString decodeErrorMessage r.body of
+                    Ok (ErrorMessage "Permission Denied. User not logged in.") ->
+                        ( model, load (authUrl model.flags) )
+
+                    Ok (ErrorMessage e) ->
+                        crash e
+
+                    Err _ ->
+                        crash "failed to error!"
             else
                 crash ("Failed to get locks with code: " ++ r.status.message)
 
