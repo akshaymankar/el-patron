@@ -19,6 +19,7 @@ import System.Directory
 
 import Handler.Locks
 import Handler.Pools
+import Handler.Authenticated
 
 mkYesodDispatch "App" resourcesApp
 
@@ -37,7 +38,7 @@ corsMiddleware frontend =
 makeApplication :: Settings -> IO Application
 makeApplication s = do
   man <- newManager
-  app <- toWaiApp $ App man (S.githubOAuthKeys s)
+  app <- toWaiApp $ App man (S.githubOAuthKeys s) (frontend s)
   return $ corsMiddleware (pack $ frontend s) app
 
 cloneRepository :: Settings -> IO ()

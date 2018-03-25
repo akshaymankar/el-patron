@@ -1,6 +1,7 @@
-/pools                                PoolsR        GET
-/auth                                 AuthR         Auth getAuth
-/locks                                LocksR        GET
-/pools/#String/locks/#String/claim    ClaimLockR    POST
-/pools/#String/locks/#String/unclaim  UnclaimLockR  POST
-/pools/#String/locks/#String/recycle  RecycleLockR  POST
+/pools                                PoolsR          GET
+/auth                                 AuthR           Auth getAuth
+/locks                                LocksR          GET
+/pools/#String/locks/#String/claim    ClaimLockR      POST
+/pools/#String/locks/#String/unclaim  UnclaimLockR    POST
+/pools/#String/locks/#String/recycle  RecycleLockR    POST
+/authenticated                        AuthenticatedR  GET

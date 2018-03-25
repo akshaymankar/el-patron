@@ -17,6 +17,7 @@ import Yesod.Form
 
 data App = App { httpManager :: Manager
                , githubOAuthKeys :: GithubOAuthKeys
+               , frontendUrl :: String
                }
 
 mkYesodData "App" $(parseRoutesFile "routes")
@@ -24,6 +25,7 @@ mkYesodData "App" $(parseRoutesFile "routes")
 instance Yesod App where
   authRoute _ = Just $ AuthR LoginR
   isAuthorized LocksR _ = isAuthorizedForLocks
+  isAuthorized AuthenticatedR _ = return Authorized
   isAuthorized (AuthR _) _ = return Authorized
   isAuthorized _ _ = return $ Unauthorized "because why not"
   approot = ApprootStatic "http://localhost:3000"
@@ -42,8 +44,8 @@ instance YesodAuth App where
   type AuthId App = Text
   getAuthId = return . Just . credsIdent
 
-  loginDest _ = LocksR
-  logoutDest _ = LocksR
+  loginDest _ = AuthenticatedR
+  logoutDest _ = AuthenticatedR
 
   authPlugins m = [oauth2Github (clientID $ githubOAuthKeys m) (clientSecret $ githubOAuthKeys m)]
 
