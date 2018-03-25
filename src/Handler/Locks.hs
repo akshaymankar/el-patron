@@ -17,23 +17,20 @@ getLocksR = let ?locksPath = locksPath in
                   groupedLocks <- lift getAllLocks
                   returnJson $ groupedLocks
 
-postClaimLockR :: Pool -> String -> Handler Html
+postClaimLockR :: Pool -> String -> Handler Value
 postClaimLockR pool lock = let ?locksPath = locksPath in
-  defaultLayout $ do
-  setTitle "move the file"
+  do
   _ <- lift $ claim pool lock
-  [whamlet|<p>Locks moved|]
+  returnJson $ ([] :: [String])
 
-postUnclaimLockR :: Pool -> String -> Handler Html
+postUnclaimLockR :: Pool -> String -> Handler Value
 postUnclaimLockR pool lock = let ?locksPath = locksPath in
-  defaultLayout $ do
-  setTitle "move the file"
+  do
   _ <- lift $ unclaim pool lock
-  [whamlet|<p>Locks moved|]
+  returnJson $ ([] :: [String])
 
-postRecycleLockR :: Pool -> String -> Handler Html
+postRecycleLockR :: Pool -> String -> Handler Value
 postRecycleLockR pool lock = let ?locksPath = locksPath in
-  defaultLayout $ do
-  setTitle "move the file"
+  do
   _ <- lift $ recycle pool lock
-  [whamlet|<p>Locks moved|]
+  returnJson $ ([] :: [String])
