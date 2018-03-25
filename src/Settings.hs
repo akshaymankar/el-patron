@@ -11,7 +11,11 @@ locksPath = tmpDir ++ "/locks"
 gitDir = tmpDir ++ "/git"
 locksRepoFile = tmpDir ++ "/locks-repo-file"
 
-data Settings = Settings { lockRepoRemote :: Text }
+data GithubOAuthKeys = GithubOAuthKeys {clientID :: Text, clientSecret :: Text}
+
+data Settings = Settings { lockRepoRemote :: Text
+                         , githubOAuthKeys :: GithubOAuthKeys
+                         , frontend :: String}
 
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,
                                          repoWorkingDir = Just $ locksPath }
