@@ -32,7 +32,7 @@ teamFromString = undefined
 data Settings = Settings { lockRepoRemote :: Text
                          , githubOAuthKeys :: GithubOAuthKeys
                          , frontend :: String
-                         , authroizedTeams :: [GithubTeam] }
+                         , authorizedTeams :: [GithubTeam] }
 
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,
                                          repoWorkingDir = Just $ locksPath }

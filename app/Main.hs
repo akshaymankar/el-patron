@@ -24,7 +24,7 @@ makeSettings Options{..} =
            (GithubOAuthKeys (pack githubClientID)
            (pack githubClientSecret))
            frontend
-           []
+           authorizedTeams
 
 attoReadM :: A.Parser a -> ReadM a
 attoReadM p = eitherReader (A.parseOnly p . pack)
@@ -46,6 +46,11 @@ options = Options
   <*> strOption
      ( long "frontend"
      <> help "Frontend to be allowed in Access-Control-Allow-Origin response header" )
+  <*> (fromM $ manyM $ option (attoReadM parseTeam)
+        ( long "authorizedTeam"
+        <> short 't'
+        <> metavar "ORG/TEAM"
+        <> help "list of authorized teams" ))
 
 
 main :: IO ()
