@@ -46,7 +46,7 @@ options = Options
   <*> strOption
      ( long "frontend"
      <> help "Frontend to be allowed in Access-Control-Allow-Origin response header" )
-  <*> (fromM $ manyM $ option (attoReadM parseTeam)
+  <*> (fromM $ someM $ option (attoReadM parseTeam)
         ( long "authorizedTeam"
         <> short 't'
         <> metavar "ORG/TEAM"
