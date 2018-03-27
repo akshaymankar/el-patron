@@ -49,3 +49,10 @@ body {
   background: #ee0;
 }
 
+.lock > p {
+  margin: 0;
+}
+
+.locked-since {
+  font-size: 0.7em;
+}

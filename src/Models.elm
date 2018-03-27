@@ -1,6 +1,8 @@
 module Models exposing (..)
 
+import Date exposing (..)
 import Dict exposing (..)
+import Http exposing (..)
 
 
 type LockState
@@ -25,7 +27,7 @@ type Route
 
 
 type alias Lock =
-    { name : String, state : LockState }
+    { name : String, state : LockState, lockedSince : Date, lockedSinceStr : String }
 
 
 type alias Pool =
@@ -44,10 +46,21 @@ type alias Model =
     { flags : Flags, pools : Pools, loading : Bool, githubToken : Maybe String }
 
 
+type Msg
+    = NoOp
+    | NewLocks (Result Http.Error Pools)
+    | PerformLockAction LockAction
+    | LockActionDone (Result Http.Error (List String))
+
+
+type ErrorMessage
+    = ErrorMessage String
+
+
 initialModel : Model
 initialModel =
     { flags = { backendUrl = "http://localhost:1000" }
-    , pools = Dict.singleton "pool1" [ { name = "Lock1", state = Claimed } ]
+    , pools = Dict.empty
     , loading = True
     , githubToken = Nothing
     }
