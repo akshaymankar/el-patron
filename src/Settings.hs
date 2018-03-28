@@ -37,8 +37,7 @@ data Settings = Settings { lockRepoRemote :: Text
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,
                                          repoWorkingDir = Just $ locksPath }
 
-execGit :: [Text] -> IO ()
+execGit :: [Text] -> IO Text
 execGit args = do
   repo <- openCliRepository repoOptions
-  _ <- shelly $ errExit True $ git repo args
-  return ()
+  shelly $ errExit True $ git repo args

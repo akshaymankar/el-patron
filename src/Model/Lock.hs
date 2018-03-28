@@ -5,7 +5,10 @@ module Model.Lock where
 
 import Data.List as L
 import Data.Map as M
-import Data.Text (pack)
+import Data.Maybe
+import Data.Text (pack, unpack)
+import Data.Time
+import Data.Time.ISO8601
 import Git.Types
 import Git.CmdLine
 import Model.Pool
@@ -15,7 +18,7 @@ import System.Directory
 import Text.Blaze
 import Data.Aeson
 
-data Lock = Lock { name :: String, path :: String, state :: LockState }
+data Lock = Lock { name :: String, path :: String, state :: LockState, lockedSince :: UTCTime }
 data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
   deriving Show
 
@@ -26,6 +29,7 @@ instance ToJSON Lock where
   toJSON Lock{..} = object
     [ "name" .= name
     , "state" .= show state
+    , "lockedSince" .= formatISO8601 lockedSince
     ]
 
 getAllLocks :: (?locksPath :: FilePath) => IO (Map Pool [Lock])
@@ -47,7 +51,10 @@ readLocksFromDir dir state = do
   pathExists <- doesPathExist dir
   if pathExists then do
     names <- (L.delete ".gitkeep") <$> listDirectory dir
-    return $ L.map (\name -> Lock name (dir ++ name) state) names
+    sequence $ L.map (\n ->
+      do
+        c <- fmap (parseISO8601 . unpack) $ execGit ["log", "-1", "--pretty=%aI", "--", pack (dir ++ "/" ++ n)]
+        return $ Lock n (dir ++ n) state (fromMaybe undefined c)) names
   else
     return []
 

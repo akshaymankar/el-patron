@@ -47,4 +47,5 @@ cloneRepository settings =  do
   if tmpDirExists
      then (removeDirectoryRecursive tmpDir)
      else (print $ tmpDir ++ " doesn't exist")
-  execGit ["clone", "--separate-git-dir", T.pack gitDir, lockRepoRemote settings, T.pack locksRepoFile]
+  _ <- execGit ["clone", "--separate-git-dir", T.pack gitDir, lockRepoRemote settings, T.pack locksRepoFile]
+  return ()
