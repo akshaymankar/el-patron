@@ -28,6 +28,9 @@ mkYesodData "App" $(parseRoutesFile "routes")
 instance Yesod App where
   authRoute _ = Just $ AuthR LoginR
   isAuthorized LocksR _ = isAuthorizedForLocks
+  isAuthorized (ClaimLockR _ _) _ = isAuthorizedForLocks
+  isAuthorized (UnclaimLockR _ _) _ = isAuthorizedForLocks
+  isAuthorized (RecycleLockR _ _) _ = isAuthorizedForLocks
   isAuthorized AuthenticatedR _ = return Authorized
   isAuthorized (AuthR _) _ = return Authorized
   isAuthorized _ _ = return $ Unauthorized "because why not"
