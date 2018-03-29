@@ -36,10 +36,10 @@ init f =
 -- UPDATE
 
 
-getWithCreds : String -> Decoder a -> Http.Request a
-getWithCreds url decoder =
+requestWithCreds : String -> String -> Decoder a -> Http.Request a
+requestWithCreds method url decoder =
     Http.request
-        { method = "Get"
+        { method = method
         , headers = [ Http.header "Accept" "application/json" ]
         , url = url
         , body = Http.emptyBody
@@ -47,6 +47,16 @@ getWithCreds url decoder =
         , timeout = Nothing
         , withCredentials = True
         }
+
+
+getWithCreds : String -> Decoder a -> Http.Request a
+getWithCreds =
+    requestWithCreds "Get"
+
+
+postWithCreds : String -> Decoder a -> Http.Request a
+postWithCreds =
+    requestWithCreds "Post"
 
 
 updateLocks : Model -> Cmd Msg
@@ -60,7 +70,7 @@ updateLocks oldModel =
 
 performLockAction : Flags -> LockAction -> Cmd Msg
 performLockAction f a =
-    Http.send LockActionDone <| Http.post (actionUrl f a) Http.emptyBody (list string)
+    Http.send LockActionDone <| postWithCreds (actionUrl f a) (list string)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
