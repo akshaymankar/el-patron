@@ -3,10 +3,11 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Model.Lock where
 
+import qualified Control.Concurrent.ParallelIO.Local as P
 import Data.List as L
 import Data.Map as M
 import Data.Maybe
-import Data.Text (pack, unpack)
+import Data.Text (pack, unpack, Text)
 import Data.Time
 import Data.Time.ISO8601
 import Git.Types
@@ -46,15 +47,26 @@ readLocks pool = do
   tobeRecycledLocks <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "-lifecycle/unclaimed") WaitingToRecycle
   return $ claimedLocks ++ unclaimedLocks ++ recyclingLocks ++ tobeRecycledLocks
 
+authorTime :: String -> IO UTCTime
+authorTime path = do
+  fromMaybe undefined
+                  <$> parseISO8601
+                  <$> unpack
+                  <$> execGit ["log", "-1", "--pretty=%aI", "--", pack path]
+
+readLockFromFile :: FilePath -> LockState -> String -> IO Lock
+readLockFromFile dir state name = Lock name lockPath state <$> authorTime lockPath where
+  lockPath = (dir ++ "/" ++ name)
+
+runIn8Threads :: [IO a] -> IO [a]
+runIn8Threads x = P.withPool 8 $ \p ->  P.parallel p x
+
 readLocksFromDir :: FilePath -> LockState -> IO [Lock]
 readLocksFromDir dir state = do
   pathExists <- doesPathExist dir
   if pathExists then do
     names <- (L.delete ".gitkeep") <$> listDirectory dir
-    sequence $ L.map (\n ->
-      do
-        c <- fmap (parseISO8601 . unpack) $ execGit ["log", "-1", "--pretty=%aI", "--", pack (dir ++ "/" ++ n)]
-        return $ Lock n (dir ++ n) state (fromMaybe undefined c)) names
+    runIn8Threads $ L.map (readLockFromFile dir state) names
   else
     return []
 

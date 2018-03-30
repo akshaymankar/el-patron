@@ -15,6 +15,7 @@ dependencies:
 - http-conduit
 - iso8601-time
 - optparse-applicative
+- parallel-io
 - shelly
 - text
 - time
