@@ -3,13 +3,20 @@ module Auth where
 
 import Data.ByteString (ByteString)
 import Data.Maybe
+import Data.Text (Text, pack)
 import qualified Data.Vector as V
 import GitHub
 import GitHub.Endpoints.Organizations.Teams
 import GitHub.Endpoints.Users
 import GitHub.Request
 import Settings
-import Data.Text (Text, pack)
+import Yesod.Auth.OAuth2.Prelude
+
+data GithubUser = GithubUser String
+
+instance FromJSON GithubUser where
+    parseJSON = withObject "User" $ \o -> GithubUser
+        <$> o .: "login"
 
 findTeam :: GithubTeam ->  V.Vector SimpleTeam -> Maybe SimpleTeam
 findTeam t = V.find (\apiteam -> (simpleTeamName apiteam) == (team t))

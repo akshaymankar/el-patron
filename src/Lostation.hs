@@ -6,7 +6,9 @@
 module Lostation where
 
 import Auth
-import Data.ByteString
+import Data.Aeson as JSON
+import Data.ByteString hiding (pack)
+import qualified Data.ByteString.Lazy as BL
 import Data.Map
 import Data.Text (pack, Text)
 import Data.Text.Encoding
@@ -52,6 +54,16 @@ instance RenderMessage App FormMessage where
 accessToken :: Creds master -> ByteString
 accessToken c = (encodeUtf8 $ (fromList (credsExtra c)) ! "accessToken")
 
+persistAuthInfo :: Creds master -> GithubUser -> HandlerT App IO ()
+persistAuthInfo c (GithubUser username) = do
+  _ <- mapM_ (uncurry setSession) $ credsExtra c
+  _ <- setSession "userId" (credsIdent c)
+  _ <- setSession "username" (pack username)
+  return ()
+
+encodeToLazyBS :: Text -> BL.ByteString
+encodeToLazyBS = BL.fromStrict . encodeUtf8
+
 instance YesodAuth App where
   type AuthId App = Text
   getAuthId = return . Just . credsIdent
@@ -72,7 +84,11 @@ instance YesodAuth App where
     eAuthorized <- lift $ isTokenAuthorized (credsIdent c) (authorizedTeams app) (accessToken c)
     case eAuthorized of
       (Right True) -> do
-        _ <- mapM_ (uncurry setSession) $ credsExtra c
-        _ <- setSession "userId" (credsIdent c)
-        return $ Authenticated (credsIdent c)
+        case JSON.decode . encodeToLazyBS $ extrasMap ! "userResponse" of
+          (Just x) -> do
+            persistAuthInfo c x
+            return $ Authenticated (credsIdent c)
+          Nothing -> return $ UserError AuthError
+        where
+          extrasMap = fromList $ credsExtra c
       _ -> return $ UserError AuthError
