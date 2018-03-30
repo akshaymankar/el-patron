@@ -8,29 +8,30 @@ import Data.Map
 import Lostation
 import Model.Lock
 import Model.Pool
-import Settings
+import Settings as S
 import Yesod.Core
 
 getLocksR :: Handler Value
-getLocksR = let ?locksPath = locksPath in
+getLocksR = let ?locksPath = S.locksPath in
                 do
                   groupedLocks <- lift getAllLocks
                   returnJson $ groupedLocks
 
 postClaimLockR :: Pool -> String -> Handler Value
-postClaimLockR pool lock = let ?locksPath = locksPath in
-  do
-  _ <- lift $ claim pool lock
-  returnJson $ ([] :: [String])
+postClaimLockR = doLockAction claim
 
 postUnclaimLockR :: Pool -> String -> Handler Value
-postUnclaimLockR pool lock = let ?locksPath = locksPath in
-  do
-  _ <- lift $ unclaim pool lock
-  returnJson $ ([] :: [String])
+postUnclaimLockR = doLockAction unclaim
 
 postRecycleLockR :: Pool -> String -> Handler Value
-postRecycleLockR pool lock = let ?locksPath = locksPath in
-  do
-  _ <- lift $ recycle pool lock
-  returnJson $ ([] :: [String])
+postRecycleLockR = doLockAction recycle
+
+-- TODO: Handle absence of username better
+doLockAction :: LockAction -> Pool -> String -> Handler Value
+doLockAction action pool lock = do
+  maybeUsername <- lookupSession "username"
+  case maybeUsername of
+    (Just username) -> do
+      _ <- lift $ action S.locksPath username pool lock
+      returnJson $ ([] :: [String])
+    _ -> returnJson $ (["Error!!"] :: [String])

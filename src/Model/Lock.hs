@@ -33,6 +33,14 @@ instance ToJSON LockOwner where
                                 , "pipeline" .= pipeline
                                 , "job" .= job
                                 , "buildNumber" .= buildNumber ]
+data LockActionRequest = LockActionRequest { locksPath :: FilePath
+                                           , username :: Text
+                                           , sourcePool :: Pool
+                                           , destinationPool :: Pool
+                                           , lockName :: String
+                                           , from :: String
+                                           , to :: String
+                                           }
 
 instance ToMarkup LockState where
   toMarkup x = toMarkup $ show x
@@ -104,11 +112,11 @@ readLocksFromDir dir state = do
     return []
 
 -- TODO: Handle concurrent access to same git repo
-moveLock :: (?locksPath :: FilePath) =>  Pool -> String -> Pool -> String -> String -> IO ()
-moveLock pool lockName destinationPool from to =
-  let commitMsg = pack $ "Move " ++ pool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
-      lockPath = ?locksPath ++ "/" ++ pool ++ "/" ++ from ++ "/" ++ lockName
-      destinationPath = ?locksPath ++ "/" ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName in do
+moveLock :: LockActionRequest -> IO ()
+moveLock LockActionRequest{..} =
+  let commitMsg = pack $ (unpack username) ++ ": Move " ++ sourcePool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
+      lockPath = locksPath ++ "/" ++ sourcePool ++ "/" ++ from ++ "/" ++ lockName
+      destinationPath = locksPath ++ "/" ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName in do
       pathExists <- doesPathExist lockPath
       renameFile lockPath destinationPath
       _ <- execGit ["add", "-A", "."]
@@ -117,11 +125,31 @@ moveLock pool lockName destinationPool from to =
       _ <- execGit ["push"]
       return ()
 
-claim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
-claim pool lockName = moveLock pool lockName pool "unclaimed" "claimed"
+type LockAction = FilePath -> Text -> Pool -> String -> IO ()
 
-unclaim :: (?locksPath :: FilePath) => Pool -> String -> IO ()
-unclaim pool lockName = moveLock pool lockName pool "claimed" "unclaimed"
+claim :: LockAction
+claim locksPath username pool lockName = moveLock $ LockActionRequest { from = "unclaimed"
+                                                                      , to = "claimed"
+                                                                      , username = username
+                                                                      , locksPath = locksPath
+                                                                      , sourcePool = pool
+                                                                      , lockName = lockName
+                                                                      , destinationPool = pool}
 
-recycle :: (?locksPath :: FilePath) => Pool -> String -> IO ()
-recycle pool lockName = moveLock pool lockName (pool ++ "-lifecycle" ) "claimed" "unclaimed"
+unclaim :: LockAction
+unclaim locksPath username pool lockName = moveLock $ LockActionRequest { from = "claimed"
+                                                                        , to = "unclaimed"
+                                                                        , username = username
+                                                                        , locksPath = locksPath
+                                                                        , sourcePool = pool
+                                                                        , lockName = lockName
+                                                                        , destinationPool = pool}
+
+recycle :: LockAction
+recycle locksPath username pool lockName = moveLock $ LockActionRequest { from = "claimed"
+                                                                        , to = "unclaimed"
+                                                                        , username = username
+                                                                        , locksPath = locksPath
+                                                                        , sourcePool = pool
+                                                                        , lockName = lockName
+                                                                        , destinationPool = (pool ++ "-lifecycle")}
