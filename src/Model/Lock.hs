@@ -4,22 +4,22 @@
 module Model.Lock where
 
 import qualified Control.Concurrent.ParallelIO.Local as P
+import Data.Aeson
+import Data.Attoparsec.Text as A
 import Data.List as L
 import Data.Map as M
 import Data.Maybe
 import Data.Text (pack, unpack, Text)
 import Data.Time
 import Data.Time.ISO8601
-import Git.Types
 import Git.CmdLine
 import Model.Pool
 import Shelly (shelly, errExit)
 import Settings
 import System.Directory
 import Text.Blaze
-import Data.Aeson
 
-data Lock = Lock { name :: String, path :: String, state :: LockState, lockedSince :: UTCTime }
+data Lock = Lock { name :: String, path :: String, state :: LockState, lockedSince :: UTCTime, lockedBy :: String }
 data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
   deriving Show
 
@@ -31,6 +31,7 @@ instance ToJSON Lock where
     [ "name" .= name
     , "state" .= show state
     , "lockedSince" .= formatISO8601 lockedSince
+    , "lockedBy" .= lockedBy
     ]
 
 getAllLocks :: (?locksPath :: FilePath) => IO (Map Pool [Lock])
@@ -54,9 +55,33 @@ authorTime path = do
                   <$> unpack
                   <$> execGit ["log", "-1", "--pretty=%aI", "--", pack path]
 
+commitAuthor :: String -> IO String
+commitAuthor path = unpack <$> execGit ["log", "-1", "--pretty=%an", "--", pack path]
+
+commitParser :: Parser String
+commitParser = do
+  pipeline <- unpack <$> takeTill (\x -> x == '/')
+  _ <- char '/'
+  job <- unpack <$> takeTill (\x -> x == ' ')
+  _ <- skipSpace
+  _ <- A.string "build"
+  _ <- skipSpace
+  buildNumber <- show <$> decimal
+  return $ pipeline ++ "/" ++ job ++ "#" ++ buildNumber
+
+readLockedBy :: FilePath -> IO String
+readLockedBy lockPath = do
+  commitMessage <- execGit ["log", "-1", "--pretty=%s", "--", pack lockPath]
+  case parseOnly commitParser commitMessage of
+    Right x -> return x
+    Left _ -> commitAuthor lockPath
+
 readLockFromFile :: FilePath -> LockState -> String -> IO Lock
-readLockFromFile dir state name = Lock name lockPath state <$> authorTime lockPath where
-  lockPath = (dir ++ "/" ++ name)
+readLockFromFile dir state name = do
+  lockedSince <- authorTime lockPath
+  lockedBy <- readLockedBy lockPath
+  return $ Lock name lockPath state lockedSince lockedBy where
+    lockPath = (dir ++ "/" ++ name)
 
 runIn8Threads :: [IO a] -> IO [a]
 runIn8Threads x = P.withPool 8 $ \p ->  P.parallel p x
