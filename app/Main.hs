@@ -11,6 +11,7 @@ import Settings
 import Yesod.Core
 
 data Options = Options { remote :: String
+                       , privateKeyFile :: String
                        , githubClientID :: String
                        , githubClientSecret :: String
                        , frontend :: String
@@ -21,6 +22,7 @@ data Options = Options { remote :: String
 makeSettings :: Options -> Settings
 makeSettings Options{..} =
   Settings (pack remote)
+           (pack privateKeyFile)
            (GithubOAuthKeys (pack githubClientID)
            (pack githubClientSecret))
            frontend
@@ -35,6 +37,10 @@ options = Options
      ( long "remote"
      <> metavar "REPO"
      <> help "Git remote for the locks repository" )
+  <*> strOption
+     ( long "private-key"
+     <> metavar "FILE"
+     <> help "Private key for the git repository" )
   <*> strOption
      ( long "github-client-id"
      <> metavar "ID"

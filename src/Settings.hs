@@ -30,6 +30,7 @@ teamFromString = undefined
 
 
 data Settings = Settings { lockRepoRemote :: Text
+                         , privateKeyFile :: Text
                          , githubOAuthKeys :: GithubOAuthKeys
                          , frontend :: String
                          , authorizedTeams :: [GithubTeam] }
