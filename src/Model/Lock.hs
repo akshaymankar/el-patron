@@ -13,6 +13,7 @@ import Data.Text (pack, unpack, Text)
 import Data.Time
 import Data.Time.ISO8601
 import Git.CmdLine
+import Model.LockOwner
 import Model.Pool
 import Shelly (shelly, errExit)
 import Settings
@@ -23,16 +24,6 @@ data Lock = Lock { name :: String, path :: String, state :: LockState, lockedSin
 data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
   deriving Show
 
-data LockOwner = Committer String | Pipeline { pipeline :: String, job :: String, buildNumber :: Int }
-  deriving (Show, Eq)
-
-instance ToJSON LockOwner where
-  toJSON (Committer c) = object [ "type" .= ("Committer" :: String)
-                                , "committer" .= c ]
-  toJSON Pipeline{..}  = object [ "type" .= ("Pipeline" :: String)
-                                , "pipeline" .= pipeline
-                                , "job" .= job
-                                , "buildNumber" .= buildNumber ]
 data LockActionRequest = LockActionRequest { locksPath :: FilePath
                                            , username :: Text
                                            , sourcePool :: Pool
@@ -72,25 +63,6 @@ authorTime path = do
                   <$> parseISO8601
                   <$> unpack
                   <$> execGit ["log", "-1", "--pretty=%aI", "--", pack path]
-
-commitAuthor :: String -> IO String
-commitAuthor path = unpack <$> execGit ["log", "-1", "--pretty=%an", "--", pack path]
-
-commitParser :: Parser LockOwner
-commitParser = do
-  p <- unpack <$> takeTill (\x -> x == '/')
-  _ <- char '/'
-  j <- unpack <$> takeTill (\x -> x == ' ')
-  _ <- A.string " build "
-  b <- decimal
-  return $ Pipeline p j b
-
-readLockOwner :: FilePath -> IO LockOwner
-readLockOwner lockPath = do
-  commitMessage <- execGit ["log", "-1", "--pretty=%s", "--", pack lockPath]
-  case parseOnly commitParser commitMessage of
-    Right x -> return x
-    Left _ -> Committer <$> commitAuthor lockPath
 
 readLockFromFile :: FilePath -> LockState -> String -> IO Lock
 readLockFromFile dir state name = do
