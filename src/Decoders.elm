@@ -67,6 +67,9 @@ ownerDecoder =
                     "Committer" ->
                         decode Committer |> required "committer" string
 
+                    "GafferUser" ->
+                        decode GafferUser |> required "username" string
+
                     somethingElse ->
                         fail <| "Unknown lock owner type: " ++ somethingElse
             )

@@ -67,6 +67,9 @@ lockedBy o =
         Committer c ->
             c
 
+        GafferUser u ->
+            u
+
 
 lockView : Flags -> Pool -> Lock -> Html Msg
 lockView f pool lock =

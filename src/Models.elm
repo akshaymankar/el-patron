@@ -29,6 +29,7 @@ type Route
 type LockOwner
     = Pipeline PipelineDetails
     | Committer String
+    | GafferUser String
 
 
 type alias PipelineDetails =
