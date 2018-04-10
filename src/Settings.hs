@@ -40,4 +40,4 @@ repoOptions = defaultRepositoryOptions { repoPath = gitDir,
 execGit :: [Text] -> IO Text
 execGit args = do
   repo <- openCliRepository repoOptions
-  shelly $ errExit True $ git repo args
+  shelly $ print_stdout False $ errExit True $ git repo args
