@@ -19,20 +19,29 @@ import Settings
 import System.Directory
 import Text.Blaze
 
-data Lock = Lock { name :: String, path :: String, state :: LockState, lockedSince :: UTCTime, lockedBy :: String }
+data Lock = Lock { name :: String, path :: String, state :: LockState, lockedSince :: UTCTime, owner :: LockOwner }
 data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
   deriving Show
+
+data LockOwner = Committer String | Pipeline { pipeline :: String, job :: String, buildNumber :: Int }
+
+instance ToJSON LockOwner where
+  toJSON (Committer c) = object [ "type" .= ("Committer" :: String)
+                                , "committer" .= c ]
+  toJSON Pipeline{..}  = object [ "type" .= ("Pipeline" :: String)
+                                , "pipeline" .= pipeline
+                                , "job" .= job
+                                , "buildNumber" .= buildNumber ]
 
 instance ToMarkup LockState where
   toMarkup x = toMarkup $ show x
 
 instance ToJSON Lock where
-  toJSON Lock{..} = object
-    [ "name" .= name
-    , "state" .= show state
-    , "lockedSince" .= formatISO8601 lockedSince
-    , "lockedBy" .= lockedBy
-    ]
+  toJSON Lock{..} = object [ "name" .= name
+                           , "state" .= show state
+                           , "lockedSince" .= formatISO8601 lockedSince
+                           , "owner" .= owner
+                           ]
 
 getAllLocks :: (?locksPath :: FilePath) => IO (Map Pool [Lock])
 getAllLocks = do
@@ -58,29 +67,27 @@ authorTime path = do
 commitAuthor :: String -> IO String
 commitAuthor path = unpack <$> execGit ["log", "-1", "--pretty=%an", "--", pack path]
 
-commitParser :: Parser String
+commitParser :: Parser LockOwner
 commitParser = do
-  pipeline <- unpack <$> takeTill (\x -> x == '/')
+  p <- unpack <$> takeTill (\x -> x == '/')
   _ <- char '/'
-  job <- unpack <$> takeTill (\x -> x == ' ')
-  _ <- skipSpace
-  _ <- A.string "build"
-  _ <- skipSpace
-  buildNumber <- show <$> decimal
-  return $ pipeline ++ "/" ++ job ++ "#" ++ buildNumber
+  j <- unpack <$> takeTill (\x -> x == ' ')
+  _ <- A.string " build "
+  b <- decimal
+  return $ Pipeline p j b
 
-readLockedBy :: FilePath -> IO String
-readLockedBy lockPath = do
+readLockOwner :: FilePath -> IO LockOwner
+readLockOwner lockPath = do
   commitMessage <- execGit ["log", "-1", "--pretty=%s", "--", pack lockPath]
   case parseOnly commitParser commitMessage of
     Right x -> return x
-    Left _ -> commitAuthor lockPath
+    Left _ -> Committer <$> commitAuthor lockPath
 
 readLockFromFile :: FilePath -> LockState -> String -> IO Lock
 readLockFromFile dir state name = do
   lockedSince <- authorTime lockPath
-  lockedBy <- readLockedBy lockPath
-  return $ Lock name lockPath state lockedSince lockedBy where
+  owner <- readLockOwner lockPath
+  return $ Lock name lockPath state lockedSince owner where
     lockPath = (dir ++ "/" ++ name)
 
 runIn8Threads :: [IO a] -> IO [a]
