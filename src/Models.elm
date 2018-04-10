@@ -26,8 +26,17 @@ type Route
     | NotFoundRoute
 
 
+type LockOwner
+    = Pipeline PipelineDetails
+    | Committer String
+
+
+type alias PipelineDetails =
+    { pipeline : String, job : String, buildNumber : Int }
+
+
 type alias Lock =
-    { name : String, state : LockState, lockedSince : Date, lockedSinceStr : String }
+    { name : String, state : LockState, lockedSince : Date, lockedSinceStr : String, owner : LockOwner }
 
 
 type alias Pool =

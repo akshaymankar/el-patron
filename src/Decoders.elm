@@ -50,6 +50,28 @@ agoDecoder d =
     Json.Decode.map (ago << diff d) dateDecoder
 
 
+ownerDecoder : Decoder LockOwner
+ownerDecoder =
+    field "type" string
+        |> andThen
+            (\t ->
+                case t of
+                    "Pipeline" ->
+                        map Pipeline
+                            (decode PipelineDetails
+                                |> required "pipeline" string
+                                |> required "job" string
+                                |> required "buildNumber" int
+                            )
+
+                    "Committer" ->
+                        decode Committer |> required "committer" string
+
+                    somethingElse ->
+                        fail <| "Unknown lock owner type: " ++ somethingElse
+            )
+
+
 decodeLock : Date -> Decoder Lock
 decodeLock d =
     decode Lock
@@ -57,6 +79,7 @@ decodeLock d =
         |> required "state" decodeLockState
         |> required "lockedSince" dateDecoder
         |> required "lockedSince" (agoDecoder d)
+        |> required "owner" ownerDecoder
 
 
 decodeModel : Date -> Decoder Pools

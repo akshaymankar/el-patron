@@ -56,3 +56,7 @@ body {
 .locked-since {
   font-size: 0.7em;
 }
+
+.locked-by {
+  font-size: 0.8em;
+}

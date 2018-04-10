@@ -1,6 +1,5 @@
 module View exposing (..)
 
-import DateUtils.Duration exposing (..)
 import Dict exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class, classList, href)
@@ -59,6 +58,16 @@ lockActionButton f pool lock =
     a [ href "#", onClick (PerformLockAction action) ] [ text (toSymbol action) ]
 
 
+lockedBy : LockOwner -> String
+lockedBy o =
+    case o of
+        Pipeline p ->
+            p.pipeline ++ "/" ++ p.job ++ "#" ++ toString p.buildNumber
+
+        Committer c ->
+            c
+
+
 lockView : Flags -> Pool -> Lock -> Html Msg
 lockView f pool lock =
     div [ lockClasses lock ]
@@ -68,6 +77,7 @@ lockView f pool lock =
             , span [] [ text " - " ]
             , span [] [ lockActionButton f pool lock ]
             ]
+        , p [ class "locked-by" ] [ text (lockedBy lock.owner) ]
         , p [ class "locked-since" ] [ text lock.lockedSinceStr ]
         ]
 
