@@ -24,6 +24,7 @@ data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
   deriving Show
 
 data LockOwner = Committer String | Pipeline { pipeline :: String, job :: String, buildNumber :: Int }
+  deriving (Show, Eq)
 
 instance ToJSON LockOwner where
   toJSON (Committer c) = object [ "type" .= ("Committer" :: String)

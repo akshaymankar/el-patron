@@ -44,3 +44,13 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - services-gaffer
+
+tests:
+  stack-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    dependencies:
+    - hspec
+    - services-gaffer
