@@ -42,7 +42,6 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    - -optl-static
     dependencies:
     - services-gaffer
 
