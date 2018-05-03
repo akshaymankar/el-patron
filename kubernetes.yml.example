@@ -1,0 +1,35 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: gaffer-frontend
+  name: gaffer-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: gaffer-frontend
+  template:
+    metadata:
+      labels:
+        run: gaffer-frontend
+    spec:
+      containers:
+      - name: gaffer-frontend
+        image: <your-image>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: gaffer-frontend
+  name: gaffer-frontend
+spec:
+  ports:
+    - port: 80
+      name: http
+      targetPort: 80
+  selector:
+    run: gaffer-frontend
+  type: LoadBalancer
