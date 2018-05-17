@@ -68,4 +68,4 @@ main = do
   where
     opts = info (options <**> helper)
       ( fullDesc
-     <> progDesc "Runs gaffer backend service" )
+     <> progDesc "Runs El Patrón API service" )

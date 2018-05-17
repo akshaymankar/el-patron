@@ -1,4 +1,4 @@
-name:    services-gaffer
+name:    el-patron-api
 version: "0.0.0"
 
 dependencies:
@@ -35,7 +35,7 @@ library:
 
 # Runnable executable for our application
 executables:
-  services-gaffer:
+  el-patron-api:
     main: Main.hs
     source-dirs: app
     ghc-options:
@@ -43,7 +43,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - services-gaffer
+    - el-patron-api
 
 tests:
   stack-test:
@@ -53,4 +53,4 @@ tests:
     - -threaded
     dependencies:
     - hspec
-    - services-gaffer
+    - el-patron-api
