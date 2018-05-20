@@ -45,6 +45,7 @@ instance ToJSON Lock where
 
 getAllLocks :: (?locksPath :: FilePath) => IO (Map Pool [Lock])
 getAllLocks = do
+  _ <- execGit ["pull", "--rebase"]
   pools <- listPools ?locksPath
   lockss <- sequence $ fmap readLocks pools
   return $ fromList (zip pools lockss)
