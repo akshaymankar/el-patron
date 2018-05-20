@@ -38,7 +38,7 @@ corsMiddleware frontend =
 makeApplication :: Settings -> IO Application
 makeApplication s = do
   man <- newManager
-  app <- toWaiApp $ App man (S.githubOAuthKeys s) (frontend s) (S.authorizedTeams s)
+  app <- toWaiApp $ App man (S.githubOAuthKeys s) (frontend s) (backend s) (S.authorizedTeams s)
   return $ corsMiddleware (pack $ frontend s) app
 
 cloneRepository :: Settings -> IO ()

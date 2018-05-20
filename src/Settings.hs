@@ -33,6 +33,7 @@ data Settings = Settings { lockRepoRemote :: Text
                          , privateKeyFile :: Text
                          , githubOAuthKeys :: GithubOAuthKeys
                          , frontend :: String
+                         , backend :: String
                          , authorizedTeams :: [GithubTeam] }
 
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,

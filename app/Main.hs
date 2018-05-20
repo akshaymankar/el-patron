@@ -15,6 +15,7 @@ data Options = Options { remote :: String
                        , githubClientID :: String
                        , githubClientSecret :: String
                        , frontend :: String
+                       , backend :: String
                        , authorizedTeams :: [GithubTeam]
                        }
   deriving Show
@@ -26,6 +27,7 @@ makeSettings Options{..} =
            (GithubOAuthKeys (pack githubClientID)
            (pack githubClientSecret))
            frontend
+           backend
            authorizedTeams
 
 attoReadM :: A.Parser a -> ReadM a
@@ -52,6 +54,9 @@ options = Options
   <*> strOption
      ( long "frontend"
      <> help "Frontend to be allowed in Access-Control-Allow-Origin response header" )
+  <*> strOption
+     ( long "backend"
+     <> help "Backend to be used as AppRoot" )
   <*> (fromM $ someM $ option (attoReadM parseTeam)
         ( long "authorizedTeam"
         <> short 't'
