@@ -1,0 +1,8 @@
+language: nodejs
+
+install:
+- npm install -g elm
+- npm install -g create-elm-app
+
+script:
+- elm app test
