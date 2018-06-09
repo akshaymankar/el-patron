@@ -39,23 +39,22 @@ instance Yesod App where
   isAuthorized (RecycleLockR _ _) _ = isAuthorizedForLocks
   isAuthorized AuthenticatedR _ = return Authorized
   isAuthorized (AuthR _) _ = return Authorized
-  isAuthorized _ _ = return $ Unauthorized "because why not"
   approot = ApprootMaster $ pack . backendUrl
 
-isAuthorizedForLocks :: HandlerT App IO AuthResult
+isAuthorizedForLocks :: HandlerFor App AuthResult
 isAuthorizedForLocks = do
   maybeUserId <- maybeAuthId
   case maybeUserId of
     Nothing -> return $ Unauthorized "User not logged in."
-    _ -> return $ Authorized
+    _ -> return Authorized
 
 instance RenderMessage App FormMessage where
     renderMessage _ _ = defaultFormMessage
 
 accessToken :: Creds master -> ByteString
-accessToken c = (encodeUtf8 $ (fromList (credsExtra c)) ! "accessToken")
+accessToken c = encodeUtf8 $ fromList (credsExtra c) ! "accessToken"
 
-persistAuthInfo :: Creds master -> GithubUser -> HandlerT App IO ()
+persistAuthInfo :: MonadHandler m => Creds master -> GithubUser -> m ()
 persistAuthInfo c (GithubUser username) = do
   _ <- mapM_ (uncurry setSession) $ credsExtra c
   _ <- setSession "userId" (credsIdent c)
@@ -76,15 +75,15 @@ instance YesodAuth App where
                                       (clientID $ githubOAuthKeys m)
                                       (clientSecret $ githubOAuthKeys m)]
 
-  authHttpManager = httpManager
+  authHttpManager = httpManager <$> getYesod
 
   maybeAuthId = lookupSession "_ID"
 
   authenticate c = do
     app <- getYesod
-    eAuthorized <- lift $ isTokenAuthorized (credsIdent c) (authorizedTeams app) (accessToken c)
+    eAuthorized <- liftIO $ isTokenAuthorized (credsIdent c) (authorizedTeams app) (accessToken c)
     case eAuthorized of
-      (Right True) -> do
+      (Right True) ->
         case JSON.decode . encodeToLazyBS $ extrasMap ! "userResponse" of
           (Just x) -> do
             persistAuthInfo c x

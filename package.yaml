@@ -12,7 +12,7 @@ dependencies:
 - github
 - gitlib
 - gitlib-cmdline == 3.1.0.2
-- http-conduit
+- http-conduit == 2.3.1
 - iso8601-time
 - optparse-applicative
 - parallel-io
