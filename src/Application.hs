@@ -18,7 +18,6 @@ import Settings as S
 import System.Directory
 
 import Handler.Locks
-import Handler.Pools
 import Handler.Authenticated
 
 mkYesodDispatch "App" resourcesApp
