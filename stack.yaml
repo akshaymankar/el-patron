@@ -70,3 +70,6 @@ extra-deps:
 # compiler-check: newer-minor
 docker:
   enable: true
+  repo: akshay0/el-patron-api-build:latest
+  run-args:
+  - --publish=3000:3000
