@@ -66,7 +66,7 @@ readLockFromFile dir state name = do
   lockedSince <- authorTime lockPath
   owner <- readLockOwner lockPath
   return $ Lock name lockPath state lockedSince owner where
-    lockPath = (dir ++ "/" ++ name)
+    lockPath = dir ++ "/" ++ name
 
 runIn8Threads :: [IO a] -> IO [a]
 runIn8Threads x = P.withPool 8 $ \p ->  P.parallel p x
@@ -75,7 +75,7 @@ readLocksFromDir :: FilePath -> LockState -> IO [Lock]
 readLocksFromDir dir state = do
   pathExists <- doesPathExist dir
   if pathExists then do
-    names <- (L.delete ".gitkeep") <$> listDirectory dir
+    names <- L.delete ".gitkeep" <$> listDirectory dir
     runIn8Threads $ L.map (readLockFromFile dir state) names
   else
     return []
@@ -83,7 +83,7 @@ readLocksFromDir dir state = do
 -- TODO: Handle concurrent access to same git repo
 moveLock :: LockActionRequest -> IO ()
 moveLock LockActionRequest{..} =
-  let commitMsg = pack $ (unpack username) ++ ": Move " ++ sourcePool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
+  let commitMsg = pack $ unpack username ++ ": Move " ++ sourcePool ++ "/" ++ from ++ "/" ++ lockName ++ " to " ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName
       lockPath = locksPath ++ "/" ++ sourcePool ++ "/" ++ from ++ "/" ++ lockName
       destinationPath = locksPath ++ "/" ++ destinationPool ++ "/" ++ to ++ "/" ++ lockName in do
       pathExists <- doesPathExist lockPath
@@ -121,4 +121,4 @@ recycle locksPath username pool lockName = moveLock $ LockActionRequest { from =
                                                                         , locksPath = locksPath
                                                                         , sourcePool = pool
                                                                         , lockName = lockName
-                                                                        , destinationPool = (pool ++ "-lifecycle")}
+                                                                        , destinationPool = pool ++ "-lifecycle"}
