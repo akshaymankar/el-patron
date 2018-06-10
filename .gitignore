@@ -20,3 +20,4 @@ cabal.sandbox.config
 \#*
 el-patron-api.cabal
 client_session_key.aes
+*.prof
