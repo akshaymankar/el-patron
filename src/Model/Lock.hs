@@ -58,10 +58,7 @@ readLocks locksPath pool = do
   return $ claimedLocks ++ unclaimedLocks ++ recyclingLocks ++ tobeRecycledLocks
 
 authorTime :: String -> IO UTCTime
-authorTime path = do
-  fromMaybe undefined
-                  <$> parseISO8601
-                  <$> unpack
+authorTime path = (fromMaybe (error "Author time not parsable") . parseISO8601) . unpack
                   <$> execGit ["log", "-1", "--pretty=%aI", "--", pack path]
 
 readLockFromFile :: FilePath -> LockState -> String -> IO Lock
