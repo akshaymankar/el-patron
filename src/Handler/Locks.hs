@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ImplicitParams    #-}
 module Handler.Locks where
 
 import Data.Map
@@ -10,10 +9,9 @@ import Settings as S
 import Yesod.Core
 
 getLocksR :: MonadHandler m => m Value
-getLocksR = let ?locksPath = S.locksPath in
-                do
-                  groupedLocks <- liftIO getAllLocks
-                  returnJson groupedLocks
+getLocksR = do
+  groupedLocks <- liftIO $ getAllLocks S.locksPath
+  returnJson groupedLocks
 
 postClaimLockR :: Pool -> String -> Handler Value
 postClaimLockR = doLockAction claim

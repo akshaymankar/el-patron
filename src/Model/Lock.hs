@@ -1,4 +1,3 @@
-{-# LANGUAGE ImplicitParams    #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 module Model.Lock where
@@ -43,19 +42,19 @@ instance ToJSON Lock where
                            , "owner" .= owner
                            ]
 
-getAllLocks :: (?locksPath :: FilePath) => IO (Map Pool [Lock])
-getAllLocks = do
+getAllLocks :: FilePath -> IO (Map Pool [Lock])
+getAllLocks locksPath = do
   _ <- execGit ["pull", "--rebase"]
-  pools <- listPools ?locksPath
-  lockss <- sequence $ fmap readLocks pools
+  pools <- listPools locksPath
+  lockss <- traverse (readLocks locksPath) pools
   return $ fromList (zip pools lockss)
 
-readLocks :: (?locksPath :: FilePath) => Pool -> IO [Lock]
-readLocks pool = do
-  claimedLocks      <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "/claimed") Claimed
-  unclaimedLocks    <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "/unclaimed") Unclaimed
-  recyclingLocks    <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") Recycling
-  tobeRecycledLocks <- readLocksFromDir (?locksPath ++ "/" ++ pool ++ "-lifecycle/unclaimed") WaitingToRecycle
+readLocks :: FilePath -> Pool -> IO [Lock]
+readLocks locksPath pool = do
+  claimedLocks      <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/claimed") Claimed
+  unclaimedLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/unclaimed") Unclaimed
+  recyclingLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") Recycling
+  tobeRecycledLocks <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/unclaimed") WaitingToRecycle
   return $ claimedLocks ++ unclaimedLocks ++ recyclingLocks ++ tobeRecycledLocks
 
 authorTime :: String -> IO UTCTime
