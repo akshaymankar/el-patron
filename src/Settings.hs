@@ -6,6 +6,7 @@ import Git.Types
 import Git.CmdLine
 import Shelly
 import Data.Attoparsec.Text as A
+
 --locksPath = "/Users/axeman/work/kubo/kubo-locks"
 tmpDir = "/tmp/gaffer"
 locksPath = tmpDir ++ "/locks"
@@ -42,4 +43,4 @@ repoOptions = defaultRepositoryOptions { repoPath = gitDir,
 execGit :: [Text] -> IO Text
 execGit args = do
   repo <- openCliRepository repoOptions
-  shelly $ print_stdout False $ errExit True $ git repo args
+  shelly $ print_stdout False $ errExit True $ run "/usr/bin/git" $ gitStdOpts repo ++ args
