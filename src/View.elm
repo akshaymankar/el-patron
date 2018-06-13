@@ -9,27 +9,43 @@ import Models exposing (..)
 
 lockClasses : Lock -> Attribute msg
 lockClasses lock =
-    classList [ ( "lock", True ), ( toString lock.state, True ) ]
+    classList [ ( "lock", True ), ( stateName lock.state, True ) ]
+
+
+stateName : LockState -> String
+stateName state =
+    case state of
+        Claimed _ ->
+            "Claimed"
+
+        Unclaimed ->
+            "Unclaimed"
+
+        Recycling _ ->
+            "Recycling"
+
+        WaitingToRecycle _ ->
+            "WaitingToRecycle"
 
 
 lockText : Lock -> Html msg
 lockText lock =
-    text (lock.name ++ " - " ++ toString lock.state)
+    text (lock.name ++ " - " ++ stateName lock.state)
 
 
 lockAction : Pool -> Lock -> LockAction
 lockAction pool lock =
     case lock.state of
-        Claimed ->
+        Claimed _ ->
             Recycle pool lock
 
         Unclaimed ->
             Claim pool lock
 
-        WaitingToRecycle ->
+        WaitingToRecycle _ ->
             NoAction
 
-        Recycling ->
+        Recycling _ ->
             Unclaim (pool ++ "-lifecycle") lock
 
 
@@ -71,6 +87,43 @@ lockedBy o =
             u
 
 
+lockedByText : Lock -> Html Msg
+lockedByText lock =
+    case lock.state of
+        Unclaimed ->
+            p [ class "locked-by", class "hidden" ] []
+
+        Claimed c ->
+            p [ class "locked-by" ] [ text <| lockedBy c.owner ]
+
+        Recycling _ ->
+            p [ class "locked-by", class "hidden" ] []
+
+        WaitingToRecycle _ ->
+            p [ class "locked-by", class "hidden" ] []
+
+
+lockedSinceElement : String -> Html Msg
+lockedSinceElement lockedSince =
+    p [ class "locked-since" ] [ text lockedSince ]
+
+
+lockedSinceText : Lock -> Html Msg
+lockedSinceText lock =
+    case lock.state of
+        Unclaimed ->
+            p [ class "locked-since", class "hidden" ] []
+
+        Claimed c ->
+            lockedSinceElement c.sinceStr
+
+        Recycling r ->
+            lockedSinceElement r.sinceStr
+
+        WaitingToRecycle w ->
+            lockedSinceElement w.sinceStr
+
+
 lockView : Flags -> Pool -> Lock -> Html Msg
 lockView f pool lock =
     div [ lockClasses lock ]
@@ -80,8 +133,8 @@ lockView f pool lock =
             , span [] [ text " - " ]
             , span [] [ lockActionButton f pool lock ]
             ]
-        , p [ class "locked-by" ] [ text (lockedBy lock.owner) ]
-        , p [ class "locked-since" ] [ text lock.lockedSinceStr ]
+        , lockedByText lock
+        , lockedSinceText lock
         ]
 
 

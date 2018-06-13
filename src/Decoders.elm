@@ -8,23 +8,38 @@ import Json.Decode.Pipeline exposing (..)
 import Models exposing (..)
 
 
-decodeLockState : Decoder LockState
-decodeLockState =
-    string
+timesAndOwnerDecoder : Date -> Decoder TimesAndOwner
+timesAndOwnerDecoder d =
+    decode TimesAndOwner
+        |> required "since" dateDecoder
+        |> required "since" (agoDecoder d)
+        |> required "owner" ownerDecoder
+
+
+timesDecoder : Date -> Decoder Times
+timesDecoder d =
+    decode Times
+        |> required "since" dateDecoder
+        |> required "since" (agoDecoder d)
+
+
+decodeLockState : Date -> Decoder LockState
+decodeLockState d =
+    field "name" string
         |> andThen
             (\str ->
                 case str of
                     "Claimed" ->
-                        succeed Claimed
+                        map Claimed (timesAndOwnerDecoder d)
 
                     "Unclaimed" ->
                         succeed Unclaimed
 
                     "Recycling" ->
-                        succeed Recycling
+                        map Recycling (timesDecoder d)
 
                     "WaitingToRecycle" ->
-                        succeed WaitingToRecycle
+                        map WaitingToRecycle (timesDecoder d)
 
                     somethingElse ->
                         fail <| "Unknown lock state: " ++ somethingElse
@@ -79,10 +94,7 @@ decodeLock : Date -> Decoder Lock
 decodeLock d =
     decode Lock
         |> required "name" string
-        |> required "state" decodeLockState
-        |> required "lockedSince" dateDecoder
-        |> required "lockedSince" (agoDecoder d)
-        |> required "owner" ownerDecoder
+        |> required "state" (decodeLockState d)
 
 
 decodeModel : Date -> Decoder Pools

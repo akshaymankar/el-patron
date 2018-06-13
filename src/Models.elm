@@ -5,11 +5,19 @@ import Dict exposing (..)
 import Http exposing (..)
 
 
+type alias TimesAndOwner =
+    { since : Date, sinceStr : String, owner : LockOwner }
+
+
+type alias Times =
+    { since : Date, sinceStr : String }
+
+
 type LockState
     = Unclaimed
-    | Claimed
-    | Recycling
-    | WaitingToRecycle
+    | Claimed TimesAndOwner
+    | Recycling Times
+    | WaitingToRecycle Times
 
 
 type LockAction
@@ -37,7 +45,7 @@ type alias PipelineDetails =
 
 
 type alias Lock =
-    { name : String, state : LockState, lockedSince : Date, lockedSinceStr : String, owner : LockOwner }
+    { name : String, state : LockState }
 
 
 type alias Pool =
