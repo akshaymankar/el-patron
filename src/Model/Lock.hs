@@ -17,10 +17,12 @@ import Model.Pool
 import Shelly (shelly, errExit)
 import Settings
 import System.Directory
-import Text.Blaze
 
-data Lock = Lock { name :: String, path :: String, state :: LockState, lockedSince :: UTCTime, owner :: LockOwner }
-data LockState = Claimed | Unclaimed | WaitingToRecycle | Recycling
+data Lock = Lock { name :: String, path :: String, state :: LockState }
+data LockState = Claimed { owner :: LockOwner, claimedSince :: UTCTime }
+               | Unclaimed
+               | WaitingToRecycle { waitingSince :: UTCTime }
+               | Recycling { recyclingSince :: UTCTime }
   deriving Show
 
 data LockActionRequest = LockActionRequest { locksPath :: FilePath
@@ -32,15 +34,23 @@ data LockActionRequest = LockActionRequest { locksPath :: FilePath
                                            , to :: String
                                            }
 
-instance ToMarkup LockState where
-  toMarkup x = toMarkup $ show x
-
 instance ToJSON Lock where
   toJSON Lock{..} = object [ "name" .= name
-                           , "state" .= show state
-                           , "lockedSince" .= formatISO8601 lockedSince
-                           , "owner" .= owner
+                           , "state" .= toJSON state
                            ]
+
+instance ToJSON LockState where
+  toJSON Claimed{..} = object [ "name" .= ("Claimed" :: String)
+                              , "owner" .= owner
+                              , "since" .= claimedSince
+                              ]
+  toJSON Unclaimed = object [ "name" .= ("Unclaimed" :: String)]
+  toJSON WaitingToRecycle{..} = object [ "name" .= ("WaitingToRecycle" :: String)
+                                       , "since" .= waitingSince
+                                       ]
+  toJSON Recycling{..} = object [ "name" .= ("Recycling" :: String)
+                                , "since" .= recyclingSince]
+
 
 getAllLocks :: FilePath -> IO (Map Pool [Lock])
 getAllLocks locksPath = do
@@ -49,34 +59,41 @@ getAllLocks locksPath = do
   lockss <- traverse (readLocks locksPath) pools
   return $ fromList (zip pools lockss)
 
+type StateCalculator = FilePath -> IO LockState
+
+claimedStateCalculator :: StateCalculator
+claimedStateCalculator locksPath             = Claimed <$> readLockOwner locksPath <*> authorTime locksPath
+unclaimedStateCalculator locksPath           = return Unclaimed
+waitingToRecycleStateCalculator locksPath = WaitingToRecycle <$> authorTime locksPath
+recyclingStateCalculator locksPath           = Recycling <$> authorTime locksPath
+
+
 readLocks :: FilePath -> Pool -> IO [Lock]
 readLocks locksPath pool = do
-  claimedLocks      <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/claimed") Claimed
-  unclaimedLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/unclaimed") Unclaimed
-  recyclingLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") Recycling
-  tobeRecycledLocks <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/unclaimed") WaitingToRecycle
+  claimedLocks      <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/claimed") claimedStateCalculator
+  unclaimedLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/unclaimed") unclaimedStateCalculator
+  recyclingLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") recyclingStateCalculator
+  tobeRecycledLocks <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/unclaimed") waitingToRecycleStateCalculator
   return $ claimedLocks ++ unclaimedLocks ++ recyclingLocks ++ tobeRecycledLocks
 
 authorTime :: String -> IO UTCTime
 authorTime path = (fromMaybe (error "Author time not parsable") . parseISO8601) . unpack
                   <$> execGit ["log", "-1", "--pretty=%aI", "--", pack path]
 
-readLockFromFile :: FilePath -> LockState -> String -> IO Lock
-readLockFromFile dir state name = do
-  lockedSince <- authorTime lockPath
-  owner <- readLockOwner lockPath
-  return $ Lock name lockPath state lockedSince owner where
-    lockPath = dir ++ "/" ++ name
-
 runIn8Threads :: [IO a] -> IO [a]
 runIn8Threads x = P.withPool 8 $ \p ->  P.parallel p x
 
-readLocksFromDir :: FilePath -> LockState -> IO [Lock]
-readLocksFromDir dir state = do
+makeLock :: FilePath -> StateCalculator -> String -> IO Lock
+makeLock dir stateCalc name =
+  Lock name lockPath <$> stateCalc lockPath where
+    lockPath = dir ++ "/" ++ name
+
+readLocksFromDir :: FilePath -> StateCalculator -> IO [Lock]
+readLocksFromDir dir stateCalc = do
   pathExists <- doesPathExist dir
   if pathExists then do
     names <- L.delete ".gitkeep" <$> listDirectory dir
-    runIn8Threads $ L.map (readLockFromFile dir state) names
+    runIn8Threads $ L.map (makeLock dir stateCalc) names
   else
     return []
 
