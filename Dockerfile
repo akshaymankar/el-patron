@@ -7,4 +7,4 @@ RUN apt-get update && \
 RUN git config --global user.email "el-patron@example.com"
 RUN git config --global user.name "el-patron"
 
-COPY .stack-work/install/x86_64-linux-*/lts-10.6/8.2.2/bin/el-patron-api /usr/bin/el-patron-api
+COPY .stack-work/install/x86_64-linux-*/lts-11.11/8.2.2/bin/el-patron-api /usr/bin/el-patron-api
