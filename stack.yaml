@@ -72,4 +72,5 @@ docker:
   enable: true
   repo: akshay0/el-patron-api-build:latest
   run-args:
+  - --net=bridge
   - --publish=3000:3000
