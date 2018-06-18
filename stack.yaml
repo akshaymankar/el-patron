@@ -69,7 +69,7 @@ extra-deps:
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
 docker:
-  enable: true
+  enable: false
   repo: akshay0/el-patron-api-build:latest
   run-args:
   - --net=bridge
