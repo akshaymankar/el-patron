@@ -52,4 +52,5 @@ jobs:
         name: Push latest image
         command: |
           docker login -u $DOCKER_USER -p $DOCKER_PASS && \
+            docker run --rm akshay0/el-patron-api:latest el-patron-api --help && \
             docker push akshay0/el-patron-api:latest
