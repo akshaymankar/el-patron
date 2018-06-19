@@ -74,3 +74,8 @@ docker:
   run-args:
   - --net=bridge
   - --publish=3000:3000
+
+image:
+  container:
+    base: "akshay0/el-patron-api-base"
+    name: "akshay0/el-patron-api"
