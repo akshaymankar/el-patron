@@ -1,0 +1,31 @@
+version: 2
+jobs:
+  build:
+    docker:
+    - image: akshay0/elm-ci
+    steps:
+    - checkout
+    - run:
+        name: Run Tests
+        command: sysconfcpus -n 2 elm test
+    - run:
+        name: Build static site for CFCR
+        command: ELM_APP_BACKEND_URL=https://locks-api.kubo.sh sysconfcpus -n 2 elm app build
+    - setup_remote_docker
+    - run:
+        name: Install docker client
+        command: |
+          set -x
+          VER="17.03.0-ce"
+          curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
+          tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+          mv /tmp/docker/* /usr/bin
+    - run:
+        name: Build image for CFCR
+        command: |
+            docker build -t akshay0/el-patron:cfcr-latest .
+    - run:
+        name: Push image for CFCR
+        command: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASS && \
+            docker push akshay0/el-patron:cfcr-latest
