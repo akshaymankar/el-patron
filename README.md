@@ -9,7 +9,9 @@ El Patrón help you organize resources like a boss!
 ## How does it work?
 
 The idea is simple, use git commits as a way to share resources. 
+
 Here is an example (inspired from real life events) to help you understand:
+
 Let's say your team shares different CI environments on 4 cloud providers: GCP, and AWS. And each of the environments are boringly named env1, env2, env3…. The git directory structure for this should look like this:
 ```
 gcp/
