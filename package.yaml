@@ -1,0 +1,56 @@
+name:    el-patron-api
+version: "0.0.0"
+
+dependencies:
+- aeson
+- attoparsec
+- base
+- blaze-markup
+- bytestring
+- containers
+- directory
+- github
+- gitlib
+- gitlib-cmdline == 3.1.0.2
+- http-conduit == 2.3.1
+- iso8601-time
+- optparse-applicative
+- parallel-io
+- shelly
+- text
+- time
+- vector
+- wai
+- wai-cors
+- warp
+- yesod-core
+- yesod-auth
+- yesod-auth-oauth2
+- yesod-form
+
+# The library contains all of our application code. The executable
+# defined below is just a thin wrapper.
+library:
+  source-dirs: src
+
+# Runnable executable for our application
+executables:
+  el-patron-api:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - el-patron-api
+
+tests:
+  stack-test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -threaded
+    dependencies:
+    - hspec
+    - el-patron-api
