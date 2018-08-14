@@ -15,7 +15,7 @@
 # resolver:
 #  name: custom-snapshot
 #  location: "./custom-snapshot.yaml"
-resolver: lts-11.11
+resolver: lts-12.6
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -44,6 +44,8 @@ extra-deps:
 - gitlib-cmdline-3.1.0.2
 - yesod-auth-oauth2-0.5.0.0
 - hoauth2-1.7.2
+- exceptions-0.8.3
+- uri-bytestring-aeson-0.1.0.6
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
