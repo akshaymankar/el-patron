@@ -35,7 +35,9 @@ data Settings = Settings { lockRepoRemote :: Text
                          , githubOAuthKeys :: GithubOAuthKeys
                          , frontend :: String
                          , backend :: String
-                         , authorizedTeams :: [GithubTeam] }
+                         , authorizedTeams :: [GithubTeam]
+                         , compiledElmFiles :: String
+                         }
 
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,
                                          repoWorkingDir = Just $ locksPath }

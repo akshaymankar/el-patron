@@ -16,6 +16,7 @@ import Data.ByteString.Char8 (pack)
 import qualified Data.Text as T
 import Settings as S
 import System.Directory
+import Network.Wai.Middleware.Static
 
 import Handler.Locks
 import Handler.Authenticated
@@ -34,11 +35,18 @@ corsMiddleware frontend =
                                         , corsIgnoreFailures = False
                                         })
 
+
+elmMiddleWare path = staticPolicy (policy (mapRootToIndexHtml path) <|> addBase path)
+
+mapRootToIndexHtml :: String -> String -> Maybe String
+mapRootToIndexHtml path "" = Just (path ++ "/index.html")
+mapRootToIndexHtml _ p = Nothing
+
 makeApplication :: Settings -> IO Application
 makeApplication s = do
   man <- newManager
   app <- toWaiApp $ App man (S.githubOAuthKeys s) (frontend s) (backend s) (S.authorizedTeams s)
-  return $ corsMiddleware (pack $ frontend s) app
+  return $ elmMiddleWare (S.compiledElmFiles s) $ corsMiddleware (pack $ frontend s) app
 
 cloneRepository :: Settings -> IO ()
 cloneRepository settings =  do

@@ -5,7 +5,5 @@ import Lostation
 import Yesod.Core
 
 getAuthenticatedR :: Handler Html
-getAuthenticatedR = do
-  App {..} <- getYesod
-  redirect frontendUrl
+getAuthenticatedR = redirect "/"
 

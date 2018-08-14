@@ -27,6 +27,7 @@ dependencies:
 - yesod-auth
 - yesod-auth-oauth2
 - yesod-form
+- wai-middleware-static
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.

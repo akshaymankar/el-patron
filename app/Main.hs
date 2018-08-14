@@ -17,6 +17,7 @@ data Options = Options { remote :: String
                        , frontend :: String
                        , backend :: String
                        , authorizedTeams :: [GithubTeam]
+                       , compiledElmFiles :: String
                        }
   deriving Show
 
@@ -29,6 +30,7 @@ makeSettings Options{..} =
            frontend
            backend
            authorizedTeams
+           compiledElmFiles
 
 attoReadM :: A.Parser a -> ReadM a
 attoReadM p = eitherReader (A.parseOnly p . pack)
@@ -62,6 +64,9 @@ options = Options
         <> short 't'
         <> metavar "ORG/TEAM"
         <> help "list of authorized teams" ))
+  <*> strOption
+     ( long "compiledElmFiles"
+     <> help "Path to built elm sources" )
 
 
 main :: IO ()
