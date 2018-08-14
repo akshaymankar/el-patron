@@ -14,8 +14,6 @@ data Options = Options { remote :: String
                        , privateKeyFile :: String
                        , githubClientID :: String
                        , githubClientSecret :: String
-                       , frontend :: String
-                       , backend :: String
                        , authorizedTeams :: [GithubTeam]
                        , compiledElmFiles :: String
                        }
@@ -27,14 +25,13 @@ makeSettings Options{..} =
            (pack privateKeyFile)
            (GithubOAuthKeys (pack githubClientID)
            (pack githubClientSecret))
-           frontend
-           backend
            authorizedTeams
            compiledElmFiles
 
 attoReadM :: A.Parser a -> ReadM a
 attoReadM p = eitherReader (A.parseOnly p . pack)
 
+{-# ANN options ("HLint: ignore" :: String) #-}
 options :: Parser Options
 options = Options
   <$> strOption
@@ -53,12 +50,6 @@ options = Options
      ( long "github-client-secret"
      <> metavar "SECRET"
      <> help "Git client secret for OAuth" )
-  <*> strOption
-     ( long "frontend"
-     <> help "Frontend to be allowed in Access-Control-Allow-Origin response header" )
-  <*> strOption
-     ( long "backend"
-     <> help "Backend to be used as AppRoot" )
   <*> (fromM $ someM $ option (attoReadM parseTeam)
         ( long "authorizedTeam"
         <> short 't'

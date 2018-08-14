@@ -57,7 +57,7 @@ type alias Pools =
 
 
 type alias Flags =
-    { backendUrl : String }
+    {}
 
 
 type alias Model =
@@ -77,7 +77,7 @@ type ErrorMessage
 
 initialModel : Model
 initialModel =
-    { flags = { backendUrl = "http://localhost:1000" }
+    { flags = {}
     , pools = Dict.empty
     , loading = True
     , githubToken = Nothing

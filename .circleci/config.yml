@@ -10,7 +10,7 @@ jobs:
         command: cd elm && sysconfcpus -n 2 elm test
     - run:
         name: Build static site for CFCR
-        command: cd elm && ELM_APP_BACKEND_URL=https://locks-api.kubo.sh sysconfcpus -n 2 elm app build
+        command: cd elm && sysconfcpus -n 2 elm app build
     - setup_remote_docker
     - run:
         name: Install docker client

@@ -20,10 +20,9 @@ data GithubTeam = GithubTeam { org :: Text, team :: Text }
 
 parseTeam :: Parser GithubTeam
 parseTeam = do
-  o <- A.takeWhile1 (\x -> x /= '/')
-  _ <- A.skip (\x -> x == '/')
-  t <- A.takeText
-  return $ GithubTeam o t
+  o <- A.takeWhile1 (/= '/')
+  _ <- A.skip (== '/')
+  GithubTeam o <$> A.takeText
 
 
 teamFromString :: String -> Maybe GithubTeam
@@ -33,14 +32,12 @@ teamFromString = undefined
 data Settings = Settings { lockRepoRemote :: Text
                          , privateKeyFile :: Text
                          , githubOAuthKeys :: GithubOAuthKeys
-                         , frontend :: String
-                         , backend :: String
                          , authorizedTeams :: [GithubTeam]
                          , compiledElmFiles :: String
                          }
 
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,
-                                         repoWorkingDir = Just $ locksPath }
+                                         repoWorkingDir = Just locksPath }
 
 execGit :: [Text] -> IO Text
 execGit args = do

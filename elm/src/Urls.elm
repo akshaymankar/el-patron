@@ -5,7 +5,7 @@ import Models exposing (..)
 
 buildActionUrl : String -> Flags -> Pool -> Lock -> String
 buildActionUrl action f pool lock =
-    f.backendUrl ++ "/pools/" ++ pool ++ "/locks/" ++ lock.name ++ "/" ++ action
+    "/pools/" ++ pool ++ "/locks/" ++ lock.name ++ "/" ++ action
 
 
 actionUrl : Flags -> LockAction -> String
@@ -26,9 +26,9 @@ actionUrl f action =
 
 locksUrl : Flags -> String
 locksUrl f =
-    f.backendUrl ++ "/locks"
+    "/locks"
 
 
 authUrl : Flags -> String
 authUrl f =
-    f.backendUrl ++ "/auth/page/github/forward"
+    "/auth/page/github/forward"

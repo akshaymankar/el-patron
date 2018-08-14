@@ -24,8 +24,6 @@ import Yesod.Form
 
 data App = App { httpManager :: Manager
                , githubOAuthKeys :: GithubOAuthKeys
-               , frontendUrl :: String
-               , backendUrl :: String
                , authorizedTeams :: [GithubTeam]
                }
 
@@ -39,7 +37,6 @@ instance Yesod App where
   isAuthorized (RecycleLockR _ _) _ = isAuthorizedForLocks
   isAuthorized AuthenticatedR _ = return Authorized
   isAuthorized (AuthR _) _ = return Authorized
-  approot = ApprootMaster $ pack . backendUrl
 
 isAuthorizedForLocks :: HandlerFor App AuthResult
 isAuthorizedForLocks = do
