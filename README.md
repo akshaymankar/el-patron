@@ -20,3 +20,31 @@ Application to manage pools of locks
 ```
 helm install deploy/kubernetes/helm/el-patron --namespace el-patron -f el-patron-secrets.yml
 ```
+
+## Run locally
+
+1. Install [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
+1. Install [elm] (https://guide.elm-lang.org/install.html)
+1. Install [create-elm-app](https://github.com/halfzebra/create-elm-app)
+1. Clone the code
+1. Build elm code
+   ```bash
+   cd el-patron/elm
+   elm app build
+   cd ..
+   ```
+1. Build haskell code
+   ```bash
+   stack build
+   ```
+1. Execute
+   ```bash
+   stack exec el-patron \
+   --remote git@github.com:akshaymankar/test-locks \
+   --private-key /ssh/id_rsa \
+   --github-client-secret <GITHUB-CLIENT-SECRET> \
+   --github-client-id <GITHUB-CLIENT_ID> \
+   -t 'ORG/TEAM' \
+   -e ./elm/build
+   ```
+    
