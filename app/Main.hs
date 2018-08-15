@@ -57,10 +57,11 @@ options = Options
         <> help "list of authorized teams" ))
   <*> strOption
      ( long "compiled-elm-files"
+     <> value "/elm"
+     <> showDefault
      <> short 'e'
      <> metavar "PATH"
      <> help "Path to built elm sources" )
-
 
 main :: IO ()
 main = do
