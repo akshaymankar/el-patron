@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "el-patron.fullname" . }}
+  labels:
+    app: {{ include "el-patron.name" . }}
+    chart: {{ include "el-patron.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "el-patron.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "el-patron.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+      - name: el-patron-secrets
+        secret:
+          defaultMode: 0600
+          secretName: {{ include "el-patron.fullname" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          - el-patron
+          args:
+          - --remote
+          - "{{ .Values.elPatron.remote }}"
+          - --private-key=/el-patron-secrets/privateKey
+          - --github-client-id
+          - $(GITHUB_CLIENT_ID)
+          - --github-client-secret
+          - $(GITHUB_CLIENT_SECRET)
+          - -t
+          - "{{ .Values.elPatron.authorizedTeam }}"
+          env:
+          - name: GITHUB_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                key: githubClientId
+                name: {{ include "el-patron.fullname" . }}
+          - name: GITHUB_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: githubClientSecret
+                name: {{ include "el-patron.fullname" . }}
+          volumeMounts:
+          - mountPath: /el-patron-secrets
+            name: el-patron-secrets
+          - mountPath: /root/.ssh/known_hosts
+            name: el-patron-secrets
+            readOnly: true
+            subPath: known_hosts
+          ports:
+          - name: http
+            containerPort: 3000
+            protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
