@@ -18,6 +18,6 @@ cabal.sandbox.config
 *.keter
 *~
 \#*
-el-patron-api.cabal
+el-patron.cabal
 client_session_key.aes
 *.prof

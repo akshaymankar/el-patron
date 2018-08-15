@@ -1,4 +1,4 @@
-name:    el-patron-api
+name:    el-patron
 version: "0.0.0"
 
 dependencies:
@@ -36,7 +36,7 @@ library:
 
 # Runnable executable for our application
 executables:
-  el-patron-api:
+  el-patron:
     main: Main.hs
     source-dirs: app
     ghc-options:
@@ -44,7 +44,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - el-patron-api
+    - el-patron
 
 tests:
   stack-test:
@@ -54,4 +54,4 @@ tests:
     - -threaded
     dependencies:
     - hspec
-    - el-patron-api
+    - el-patron
