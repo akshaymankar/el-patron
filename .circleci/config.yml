@@ -11,24 +11,18 @@ jobs:
     - run:
         name: Build static site for CFCR
         command: cd elm && sysconfcpus -n 2 elm app build
-    - setup_remote_docker
+
     - run:
-        name: Install docker client
+        name: Create workspace
         command: |
           set -x
-          VER="17.03.0-ce"
-          curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-          tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-          mv /tmp/docker/* /usr/bin
-    - run:
-        name: Build image for CFCR
-        command: |
-            docker build -t akshay0/el-patron:cfcr-latest elm
-    - run:
-        name: Push image for CFCR
-        command: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASS && \
-            docker push akshay0/el-patron:cfcr-latest
+          mkdir -p workspace
+          mv elm/build workspace/elm
+
+    - persist_to_workspace:
+        root: workspace
+        paths:
+        - elm
 
   build-haskell:
     docker:
@@ -59,7 +53,7 @@ jobs:
 
     - run:
         name: Compile
-        command: stack test --no-run-tests
+        command: stack test --no-run-tests -j 2
 
     - save_cache:
         key: stack-{{ checksum "resolver.txt" }}
@@ -79,14 +73,42 @@ jobs:
         command: stack image container
 
     - run:
-        name: Push latest image
+        name: Save the docker image
         command: |
-          docker login -u $DOCKER_USER -p $DOCKER_PASS && \
-            docker run --rm akshay0/el-patron-api:latest el-patron-api --help && \
-            docker push akshay0/el-patron-api:latest
+          mkdir -p workspace
+          docker run --rm akshay0/el-patron-api:latest el-patron-api --help && \
+          docker save akshay0/el-patron-api:latest | gzip > workspace/el-patron-api-image.tgz
+
+    - persist_to_workspace:
+        root: workspace
+        paths:
+        - el-patron-api-image.tgz
+
+  add-compiled-elm-to-docker-image:
+    docker:
+    - image: docker:stable
+    steps:
+    - setup_remote_docker
+    - attach_workspace:
+        at: /tmp/workspace
+    - run:
+        name: Create final docker image
+        command: |
+          set -e
+          echo "FROM akshay0/el-patron-api:latest
+          ADD elm /elm" > /tmp/workspace/Dockerfile
+          docker load -i /tmp/workspace/el-patron-api-image.tgz
+          docker build --no-cache -t akshay0/el-patron:latest /tmp/workspace
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker push akshay0/el-patron:latest
+
 workflows:
   version: 2
   build:
     jobs:
     - build-elm
     - build-haskell
+    - add-compiled-elm-to-docker-image:
+        requires:
+        - build-elm
+        - build-haskell
