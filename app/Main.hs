@@ -51,12 +51,14 @@ options = Options
      <> metavar "SECRET"
      <> help "Git client secret for OAuth" )
   <*> (fromM $ someM $ option (attoReadM parseTeam)
-        ( long "authorizedTeam"
+        ( long "authorized-team"
         <> short 't'
         <> metavar "ORG/TEAM"
         <> help "list of authorized teams" ))
   <*> strOption
-     ( long "compiledElmFiles"
+     ( long "compiled-elm-files"
+     <> short 'e'
+     <> metavar "PATH"
      <> help "Path to built elm sources" )
 
 
