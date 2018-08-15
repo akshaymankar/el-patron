@@ -47,6 +47,10 @@ jobs:
         keys:
         - stack-{{ checksum "resolver.txt" }}
 
+    - restore_cache:
+        keys:
+        - stack-work-{{ checksum "resolver.txt" }}-{{ checksum "stack.yaml" }}
+
     - run:
         name: Stack setup
         command: stack setup
@@ -59,6 +63,11 @@ jobs:
         key: stack-{{ checksum "resolver.txt" }}
         paths:
           - ~/.stack
+
+    - save_cache:
+        key: stack-work-{{ checksum "resolver.txt" }}-{{ checksum "stack.yaml" }}
+        paths:
+          - .stack-work
 
     - run:
         name: Run Tests
@@ -76,7 +85,7 @@ jobs:
         name: Save the docker image
         command: |
           mkdir -p workspace
-          docker run --rm akshay0/el-patron-api:latest el-patron-api --help && \
+          docker run --rm akshay0/el-patron-api:latest el-patron --help && \
           docker save akshay0/el-patron-api:latest | gzip > workspace/el-patron-api-image.tgz
 
     - persist_to_workspace:
