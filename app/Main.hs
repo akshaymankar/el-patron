@@ -16,6 +16,7 @@ data Options = Options { remote :: String
                        , githubClientSecret :: String
                        , authorizedTeams :: [GithubTeam]
                        , compiledElmFiles :: String
+                       , port :: Int
                        }
   deriving Show
 
@@ -62,14 +63,20 @@ options = Options
      <> short 'e'
      <> metavar "PATH"
      <> help "Path to built elm sources" )
+  <*> option auto
+     ( long "port"
+     <> value 3000
+     <> showDefault
+     <> short 'p'
+     <> help "Port to run El Patrón" )
 
 main :: IO ()
 main = do
-  gafferOpts <- execParser opts
-  cloneRepository $ makeSettings gafferOpts
-  app <- makeApplication $ makeSettings gafferOpts
-  run 3000 app
+  opts <- execParser optsParser
+  cloneRepository $ makeSettings opts
+  app <- makeApplication $ makeSettings opts
+  run (port opts) app
   where
-    opts = info (options <**> helper)
+    optsParser = info (options <**> helper)
       ( fullDesc
      <> progDesc "Runs El Patrón API service" )
