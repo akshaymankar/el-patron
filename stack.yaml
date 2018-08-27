@@ -81,3 +81,5 @@ image:
   container:
     base: "akshay0/el-patron-api-base"
     name: "akshay0/el-patron-api"
+    add:
+      run-with-env.sh: /run-with-env.sh
