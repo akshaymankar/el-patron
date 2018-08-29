@@ -1,6 +1,6 @@
 # El Patrón
 
-Application to manage pools of locks 
+Application to manage pools of locks. Read more about pools and locks [here](https://github.com/concourse/pool-resource)
 
 ## Deploy to Kubernetes using helm
 
