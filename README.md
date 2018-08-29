@@ -2,7 +2,7 @@
 
 Application to manage pools of locks 
 
-## Deploy to K8s using helm
+## Deploy to Kubernetes using helm
 
 1. Create a [Github OAuth App](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/):
     - Homepage URL must be root of whatever domain you use
@@ -20,6 +20,15 @@ Application to manage pools of locks
 ```
 helm install deploy/kubernetes/helm/el-patron --namespace el-patron -f el-patron-secrets.yml
 ```
+
+## Push to Cloud Foundry
+
+1. Create a [Github OAuth App](https://developer.github.com/apps/building-oauth-apps/creating-an-oauth-app/):
+    - Homepage URL must be root of whatever domain you use
+    - Authorization callback URL must be `http://YOUR-DOMAIN/auth/page/github/callback`
+1. Copy `manifest.yml.exmaple` to `manifest.yml`
+1. Fill in all the values in `env` in `manifest.yml`
+1. `cf push <name>`
 
 ## Run locally
 
@@ -47,4 +56,3 @@ helm install deploy/kubernetes/helm/el-patron --namespace el-patron -f el-patron
    -t 'ORG/TEAM' \
    -e ./elm/build
    ```
-    
