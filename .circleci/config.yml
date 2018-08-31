@@ -107,9 +107,9 @@ jobs:
           echo "FROM akshay0/el-patron-api:latest
           ADD elm /elm" > /tmp/workspace/Dockerfile
           docker load -i /tmp/workspace/el-patron-api-image.tgz
-          docker build --no-cache -t akshay0/el-patron:latest /tmp/workspace
+          docker build --no-cache -t akshay0/el-patron:edge /tmp/workspace
           docker login -u $DOCKER_USER -p $DOCKER_PASS
-          docker push akshay0/el-patron:latest
+          docker push akshay0/el-patron:edge
 
 workflows:
   version: 2
