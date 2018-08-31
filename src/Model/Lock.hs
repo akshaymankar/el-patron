@@ -7,6 +7,7 @@ import Data.Aeson
 import Data.Attoparsec.Text as A
 import Data.List as L
 import Data.Map as M
+import Data.Map.Lazy as LazyMap
 import Data.Maybe
 import Data.Text (pack, unpack, Text)
 import Data.Time
@@ -51,13 +52,12 @@ instance ToJSON LockState where
   toJSON Recycling{..} = object [ "name" .= ("Recycling" :: String)
                                 , "since" .= recyclingSince]
 
-
 getAllLocks :: FilePath -> IO (Map Pool [Lock])
 getAllLocks locksPath = do
   _ <- execGit ["pull", "--rebase"]
   pools <- listPools locksPath
   lockss <- traverse (readLocks locksPath) pools
-  return $ fromList (zip pools lockss)
+  return $ LazyMap.filter (not.Prelude.null) $ fromList (zip pools lockss)
 
 type StateCalculator = FilePath -> IO LockState
 
