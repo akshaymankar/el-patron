@@ -1,28 +1,29 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE ViewPatterns      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ViewPatterns          #-}
 module Lostation where
 
-import Auth
-import Data.Aeson as JSON
-import Data.ByteString hiding (pack)
-import qualified Data.ByteString.Lazy as BL
-import Data.Map
-import Data.Text (pack, Text)
-import Data.Text.Encoding
-import Git.Types
-import Network.HTTP.Client.Conduit (Manager, newManager)
-import Settings (GithubOAuthKeys, clientID, clientSecret, GithubTeam)
-import Yesod.Auth
-import Yesod.Auth.Message
-import Yesod.Auth.OAuth2.Github
-import Yesod.Core
-import Yesod.Form
+import           Auth
+import           Data.Aeson                  as JSON
+import           Data.ByteString             hiding (pack)
+import qualified Data.ByteString.Lazy        as BL
+import           Data.Map
+import           Data.Text                   (Text, pack)
+import           Data.Text.Encoding
+import           Git.Types
+import           Network.HTTP.Client.Conduit (Manager, newManager)
+import           Settings                    (GithubOAuthKeys, GithubTeam,
+                                              clientID, clientSecret)
+import           Yesod.Auth
+import           Yesod.Auth.Message
+import           Yesod.Auth.OAuth2.Github
+import           Yesod.Core
+import           Yesod.Form
 
 
-data App = App { httpManager :: Manager
+data App = App { httpManager     :: Manager
                , githubOAuthKeys :: GithubOAuthKeys
                , authorizedTeams :: [GithubTeam]
                }
@@ -31,19 +32,19 @@ mkYesodData "App" $(parseRoutesFile "routes")
 
 instance Yesod App where
   authRoute _ = Just $ AuthR LoginR
-  isAuthorized LocksR _ = isAuthorizedForLocks
-  isAuthorized (ClaimLockR _ _) _ = isAuthorizedForLocks
+  isAuthorized LocksR _             = isAuthorizedForLocks
+  isAuthorized (ClaimLockR _ _) _   = isAuthorizedForLocks
   isAuthorized (UnclaimLockR _ _) _ = isAuthorizedForLocks
   isAuthorized (RecycleLockR _ _) _ = isAuthorizedForLocks
-  isAuthorized AuthenticatedR _ = return Authorized
-  isAuthorized (AuthR _) _ = return Authorized
+  isAuthorized AuthenticatedR _     = return Authorized
+  isAuthorized (AuthR _) _          = return Authorized
 
 isAuthorizedForLocks :: HandlerFor App AuthResult
 isAuthorizedForLocks = do
   maybeUserId <- maybeAuthId
   case maybeUserId of
     Nothing -> return $ Unauthorized "User not logged in."
-    _ -> return Authorized
+    _       -> return Authorized
 
 instance RenderMessage App FormMessage where
     renderMessage _ _ = defaultFormMessage
@@ -53,7 +54,7 @@ accessToken c = encodeUtf8 $ fromList (credsExtra c) ! "accessToken"
 
 persistAuthInfo :: MonadHandler m => Creds master -> GithubUser -> m ()
 persistAuthInfo c (GithubUser username) = do
-  _ <- mapM_ (uncurry setSession) $ credsExtra c
+  mapM_ (uncurry setSession) $ credsExtra c
   _ <- setSession "userId" (credsIdent c)
   _ <- setSession "username" (pack username)
   return ()

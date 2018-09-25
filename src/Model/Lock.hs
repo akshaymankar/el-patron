@@ -3,21 +3,21 @@
 module Model.Lock where
 
 import qualified Control.Concurrent.ParallelIO.Local as P
-import Data.Aeson
-import Data.Attoparsec.Text as A
-import Data.List as L
-import Data.Map as M
-import Data.Map.Lazy as LazyMap
-import Data.Maybe
-import Data.Text (pack, unpack, Text)
-import Data.Time
-import Data.Time.ISO8601
-import Git.CmdLine
-import Model.LockOwner
-import Model.Pool
-import Shelly (shelly, errExit)
-import Settings
-import System.Directory
+import           Data.Aeson
+import           Data.Attoparsec.Text                as A
+import           Data.List                           as L
+import           Data.Map                            as M
+import           Data.Map.Lazy                       as LazyMap
+import           Data.Maybe
+import           Data.Text                           (Text, pack, unpack)
+import           Data.Time
+import           Data.Time.ISO8601
+import           Git.CmdLine
+import           Model.LockOwner
+import           Model.Pool
+import           Settings
+import           Shelly                              (errExit, shelly)
+import           System.Directory
 
 data Lock = Lock { name :: String, path :: String, state :: LockState }
 data LockState = Claimed { owner :: LockOwner, claimedSince :: UTCTime }
@@ -26,13 +26,13 @@ data LockState = Claimed { owner :: LockOwner, claimedSince :: UTCTime }
                | Recycling { recyclingSince :: UTCTime }
   deriving Show
 
-data LockActionRequest = LockActionRequest { locksPath :: FilePath
-                                           , username :: Text
-                                           , sourcePool :: Pool
+data LockActionRequest = LockActionRequest { locksPath       :: FilePath
+                                           , username        :: Text
+                                           , sourcePool      :: Pool
                                            , destinationPool :: Pool
-                                           , lockName :: String
-                                           , from :: String
-                                           , to :: String
+                                           , lockName        :: String
+                                           , from            :: String
+                                           , to              :: String
                                            }
 
 instance ToJSON Lock where

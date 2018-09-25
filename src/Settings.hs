@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Settings where
 
-import Data.Text
-import Git.Types
-import Git.CmdLine
-import Shelly
 import Data.Attoparsec.Text as A
+import Data.Text
+import Git.CmdLine
+import Git.Types
+import Shelly
 
 --locksPath = "/Users/axeman/work/kubo/kubo-locks"
 tmpDir = "/tmp/gaffer"
@@ -29,10 +29,10 @@ teamFromString :: String -> Maybe GithubTeam
 teamFromString = undefined
 
 
-data Settings = Settings { lockRepoRemote :: Text
-                         , privateKeyFile :: Text
-                         , githubOAuthKeys :: GithubOAuthKeys
-                         , authorizedTeams :: [GithubTeam]
+data Settings = Settings { lockRepoRemote   :: Text
+                         , privateKeyFile   :: Text
+                         , githubOAuthKeys  :: GithubOAuthKeys
+                         , authorizedTeams  :: [GithubTeam]
                          , compiledElmFiles :: String
                          }
 

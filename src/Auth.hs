@@ -1,16 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Auth where
 
-import Data.ByteString (ByteString)
-import Data.Maybe
-import Data.Text (Text, pack)
-import qualified Data.Vector as V
-import GitHub
-import GitHub.Endpoints.Organizations.Teams
-import GitHub.Endpoints.Users
-import GitHub.Request
-import Settings
-import Yesod.Auth.OAuth2.Prelude
+import           Data.ByteString                      (ByteString)
+import           Data.Maybe
+import           Data.Text                            (Text, pack)
+import qualified Data.Vector                          as V
+import           GitHub
+import           GitHub.Endpoints.Organizations.Teams
+import           GitHub.Endpoints.Users
+import           GitHub.Request
+import           Settings
+import           Yesod.Auth.OAuth2.Prelude
 
 newtype GithubUser = GithubUser String
 

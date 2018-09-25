@@ -1,22 +1,22 @@
 {-# LANGUAGE RecordWildCards #-}
-import Application (makeApplication, cloneRepository) -- for YesodDispatch instance
-import qualified Data.Attoparsec.Text as A
-import Data.Semigroup ((<>))
-import Data.Text (pack)
-import Lostation
-import Network.Wai.Handler.Warp (run)
-import Options.Applicative
-import Options.Applicative.Types
-import Settings
-import Yesod.Core
+import           Application               (cloneRepository, makeApplication)
+import qualified Data.Attoparsec.Text      as A
+import           Data.Semigroup            ((<>))
+import           Data.Text                 (pack)
+import           Lostation
+import           Network.Wai.Handler.Warp  (run)
+import           Options.Applicative
+import           Options.Applicative.Types
+import           Settings
+import           Yesod.Core
 
-data Options = Options { remote :: String
-                       , privateKeyFile :: String
-                       , githubClientID :: String
+data Options = Options { remote             :: String
+                       , privateKeyFile     :: String
+                       , githubClientID     :: String
                        , githubClientSecret :: String
-                       , authorizedTeams :: [GithubTeam]
-                       , compiledElmFiles :: String
-                       , port :: Int
+                       , authorizedTeams    :: [GithubTeam]
+                       , compiledElmFiles   :: String
+                       , port               :: Int
                        }
   deriving Show
 

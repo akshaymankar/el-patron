@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Model.LockOwner where
 
-import Control.Applicative ((<|>))
+import Control.Applicative  ((<|>))
 import Data.Aeson
 import Data.Attoparsec.Text as A
 import Data.Text
@@ -28,16 +28,15 @@ commitAuthor path = unpack <$> execGit ["log", "-1", "--pretty=%an", "--", pack 
 
 pipelineParser :: Parser LockOwner
 pipelineParser = do
-  p <- unpack <$> takeTill (\x -> x == '/')
+  p <- unpack <$> takeTill (== '/')
   _ <- char '/'
-  j <- unpack <$> takeTill (\x -> x == ' ')
+  j <- unpack <$> takeTill (== ' ')
   _ <- A.string " build "
-  b <- decimal
-  return $ Pipeline p j b
+  Pipeline p j <$> decimal
 
 gafferUserParser :: Parser LockOwner
 gafferUserParser = do
-  username <- unpack <$> takeTill (\x -> x == ':')
+  username <- unpack <$> takeTill (== ':')
   _ <- A.string ": Move" -- To verify that commit was made to move the lock
   return $ GafferUser username
 
@@ -48,7 +47,7 @@ readLockOwner :: FilePath -> IO LockOwner
 readLockOwner lockPath = do
   commitMessage <- execGit ["log", "-1", "--pretty=%s", "--", pack lockPath]
   case parseOwnerFromCommitMessage commitMessage of
-    Just x -> return x
+    Just x  -> return x
     Nothing -> Committer <$> commitAuthor lockPath
 
 parseToMaybe :: Parser a -> Text -> Maybe a

@@ -1,24 +1,24 @@
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE ViewPatterns         #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE ViewPatterns      #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Application where
 
-import Lostation
-import Network.HTTP.Client.Conduit (newManager)
-import Network.Wai
-import Yesod.Core
-import Yesod.Auth
-import Data.ByteString (ByteString)
-import Data.ByteString.Char8 (pack)
-import qualified Data.Text as T
-import Settings as S
-import System.Directory
-import Network.Wai.Middleware.Static
+import           Data.ByteString               (ByteString)
+import           Data.ByteString.Char8         (pack)
+import qualified Data.Text                     as T
+import           Lostation
+import           Network.HTTP.Client.Conduit   (newManager)
+import           Network.Wai
+import           Network.Wai.Middleware.Static
+import           Settings                      as S
+import           System.Directory
+import           Yesod.Auth
+import           Yesod.Core
 
-import Handler.Locks
-import Handler.Authenticated
+import           Handler.Authenticated
+import           Handler.Locks
 
 mkYesodDispatch "App" resourcesApp
 
@@ -26,7 +26,7 @@ elmMiddleWare path = staticPolicy (policy (mapRootToIndexHtml path) <|> addBase 
 
 mapRootToIndexHtml :: String -> String -> Maybe String
 mapRootToIndexHtml path "" = Just (path ++ "/index.html")
-mapRootToIndexHtml _ p = Nothing
+mapRootToIndexHtml _ p     = Nothing
 
 makeApplication :: Settings -> IO Application
 makeApplication s = do

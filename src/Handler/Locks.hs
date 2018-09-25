@@ -5,7 +5,7 @@ import Data.Map
 import Lostation
 import Model.Lock
 import Model.Pool
-import Settings as S
+import Settings   as S
 import Yesod.Core
 
 getLocksR :: MonadHandler m => m Value
