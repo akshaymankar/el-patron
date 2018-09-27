@@ -46,7 +46,7 @@ lockAction pool lock =
             NoAction
 
         Recycling _ ->
-            Unclaim (pool ++ "-lifecycle") lock
+            Unclaim { pool | name = pool.name ++ "-lifecycle" } lock
 
 
 toSymbol : LockAction -> String
@@ -143,14 +143,14 @@ locksView f pool locks =
     div [] (List.map (lockView f pool) locks)
 
 
-poolView : Flags -> Pool -> List Lock -> Html Msg
-poolView f pool locks =
-    div [ class "item" ] [ p [ class "pool" ] [ text pool ], locksView f pool locks ]
+poolView : Flags -> ( Pool, List Lock ) -> Html Msg
+poolView f ( pool, locks ) =
+    div [ class "item" ] [ p [ class "pool" ] [ text pool.name ], locksView f pool locks ]
 
 
 poolsView : Model -> List (Html Msg)
 poolsView model =
-    Dict.values (Dict.map (poolView model.flags) model.pools)
+    List.map (poolView model.flags) model.pools
 
 
 view : Model -> Html Msg

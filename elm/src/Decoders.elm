@@ -3,6 +3,7 @@ module Decoders exposing (..)
 import Date exposing (..)
 import Date.Extra.Duration exposing (..)
 import DateUtils.Duration exposing (..)
+import Dict exposing (fromList)
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 import Models exposing (..)
@@ -99,7 +100,23 @@ decodeLock d =
 
 decodeModel : Date -> Decoder Pools
 decodeModel d =
-    dict <| list (decodeLock d)
+    list (decodeTuple d)
+
+
+decodeTuple : Date -> Decoder ( Pool, List Lock )
+decodeTuple d =
+    map2 makeTuple (index 0 decodePool) (index 1 (list (decodeLock d)))
+
+
+makeTuple : a -> b -> ( a, b )
+makeTuple a b =
+    ( a, b )
+
+
+decodePool : Decoder Pool
+decodePool =
+    decode Pool
+        |> required "poolName" string
 
 
 decodeErrorMessage : Decoder ErrorMessage

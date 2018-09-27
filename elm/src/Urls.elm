@@ -5,7 +5,7 @@ import Models exposing (..)
 
 buildActionUrl : String -> Flags -> Pool -> Lock -> String
 buildActionUrl action f pool lock =
-    "/pools/" ++ pool ++ "/locks/" ++ lock.name ++ "/" ++ action
+    "/pools/" ++ pool.name ++ "/locks/" ++ lock.name ++ "/" ++ action
 
 
 actionUrl : Flags -> LockAction -> String

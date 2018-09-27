@@ -28,8 +28,8 @@ data LockState = Claimed { owner :: LockOwner, claimedSince :: UTCTime }
 
 data LockActionRequest = LockActionRequest { locksPath       :: FilePath
                                            , username        :: Text
-                                           , sourcePool      :: Pool
-                                           , destinationPool :: Pool
+                                           , sourcePool      :: String
+                                           , destinationPool :: String
                                            , lockName        :: String
                                            , from            :: String
                                            , to              :: String
@@ -39,6 +39,7 @@ instance ToJSON Lock where
   toJSON Lock{..} = object [ "name" .= name
                            , "state" .= toJSON state
                            ]
+
 
 instance ToJSON LockState where
   toJSON Claimed{..} = object [ "name" .= ("Claimed" :: String)
@@ -69,7 +70,7 @@ recyclingStateCalculator locksPath           = Recycling <$> authorTime locksPat
 
 
 readLocks :: FilePath -> Pool -> IO [Lock]
-readLocks locksPath pool = do
+readLocks locksPath (Pool pool) = do
   claimedLocks      <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/claimed") claimedStateCalculator
   unclaimedLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/unclaimed") unclaimedStateCalculator
   recyclingLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") recyclingStateCalculator
@@ -111,7 +112,7 @@ moveLock LockActionRequest{..} =
       _ <- execGit ["push"]
       return ()
 
-type LockAction = FilePath -> Text -> Pool -> String -> IO ()
+type LockAction = FilePath -> Text -> String -> String -> IO ()
 
 claim :: LockAction
 claim locksPath username pool lockName = moveLock $ LockActionRequest { from = "unclaimed"

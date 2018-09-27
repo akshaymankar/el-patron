@@ -13,17 +13,17 @@ getLocksR = do
   groupedLocks <- liftIO $ getAllLocks S.locksPath
   returnJson groupedLocks
 
-postClaimLockR :: Pool -> String -> Handler Value
+postClaimLockR :: String -> String -> Handler Value
 postClaimLockR = doLockAction claim
 
-postUnclaimLockR :: Pool -> String -> Handler Value
+postUnclaimLockR :: String -> String -> Handler Value
 postUnclaimLockR = doLockAction unclaim
 
-postRecycleLockR :: Pool -> String -> Handler Value
+postRecycleLockR :: String -> String -> Handler Value
 postRecycleLockR = doLockAction recycle
 
 -- TODO: Handle absence of username better
-doLockAction :: MonadHandler m => LockAction -> Pool -> String -> m Value
+doLockAction :: MonadHandler m => LockAction -> String -> String -> m Value
 doLockAction action pool lock = do
   maybeUsername <- lookupSession "username"
   case maybeUsername of

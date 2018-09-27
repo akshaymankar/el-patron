@@ -1,7 +1,6 @@
 module Models exposing (..)
 
 import Date exposing (..)
-import Dict exposing (..)
 import Http exposing (..)
 
 
@@ -49,11 +48,11 @@ type alias Lock =
 
 
 type alias Pool =
-    String
+    { name : String }
 
 
 type alias Pools =
-    Dict Pool (List Lock)
+    List ( Pool, List Lock )
 
 
 type alias Flags =
@@ -78,7 +77,7 @@ type ErrorMessage
 initialModel : Model
 initialModel =
     { flags = {}
-    , pools = Dict.empty
+    , pools = []
     , loading = True
     , githubToken = Nothing
     }

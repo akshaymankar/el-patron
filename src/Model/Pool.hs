@@ -1,11 +1,22 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Model.Pool where
 
+import Data.Aeson
 import Data.List
+import GHC.Generics
 import System.Directory
 
-type Pool = String
+data Pool = Pool {poolName :: String}
+  deriving (Eq, Show, Ord, Generic)
+
+instance ToJSON Pool
+instance ToJSONKey Pool
 
 listPools :: FilePath -> IO [Pool]
 listPools d = do
   pools <- delete ".gitignore" .  delete ".git" <$> listDirectory d
-  return $ filter (not . isInfixOf "lifecycle") pools
+  return $ makePools pools
+
+
+makePools :: [String] -> [Pool]
+makePools poolNames = map Pool $ filter (not . isInfixOf "lifecycle") poolNames
