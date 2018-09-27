@@ -6,7 +6,7 @@ import Data.List
 import GHC.Generics
 import System.Directory
 
-data Pool = Pool {poolName :: String}
+data Pool = Pool {poolName :: String, poolHasLifecycle :: Bool}
   deriving (Eq, Show, Ord, Generic)
 
 instance ToJSON Pool
@@ -19,4 +19,7 @@ listPools d = do
 
 
 makePools :: [String] -> [Pool]
-makePools poolNames = map Pool $ filter (not . isInfixOf "lifecycle") poolNames
+makePools poolNames =
+  let basePoolNames = filter (not . isInfixOf "lifecycle") poolNames
+   in
+   zipWith Pool basePoolNames $ map (\p -> (p ++ "-lifecycle") `elem` poolNames) basePoolNames

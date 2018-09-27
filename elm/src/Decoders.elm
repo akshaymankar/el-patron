@@ -117,6 +117,7 @@ decodePool : Decoder Pool
 decodePool =
     decode Pool
         |> required "poolName" string
+        |> required "poolHasLifecycle" bool
 
 
 decodeErrorMessage : Decoder ErrorMessage

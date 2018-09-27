@@ -70,7 +70,7 @@ recyclingStateCalculator locksPath           = Recycling <$> authorTime locksPat
 
 
 readLocks :: FilePath -> Pool -> IO [Lock]
-readLocks locksPath (Pool pool) = do
+readLocks locksPath (Pool pool _) = do
   claimedLocks      <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/claimed") claimedStateCalculator
   unclaimedLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "/unclaimed") unclaimedStateCalculator
   recyclingLocks    <- readLocksFromDir (locksPath ++ "/" ++ pool ++ "-lifecycle/claimed") recyclingStateCalculator

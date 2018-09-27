@@ -1,6 +1,5 @@
 module View exposing (..)
 
-import Dict exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class, classList, href)
 import Html.Events exposing (onClick)
@@ -37,7 +36,10 @@ lockAction : Pool -> Lock -> LockAction
 lockAction pool lock =
     case lock.state of
         Claimed _ ->
-            Recycle pool lock
+            if pool.hasLifecycle then
+                Recycle pool lock
+            else
+                Unclaim pool lock
 
         Unclaimed ->
             Claim pool lock

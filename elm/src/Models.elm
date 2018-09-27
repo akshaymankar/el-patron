@@ -48,7 +48,7 @@ type alias Lock =
 
 
 type alias Pool =
-    { name : String }
+    { name : String, hasLifecycle : Bool }
 
 
 type alias Pools =
