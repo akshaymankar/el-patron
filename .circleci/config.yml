@@ -110,7 +110,25 @@ jobs:
           docker build --no-cache -t akshay0/el-patron:edge /tmp/workspace
           docker login -u $DOCKER_USER -p $DOCKER_PASS
           docker push akshay0/el-patron:edge
+          docker tag akshay0/el-patron:edge "akshay0/el-patron:$CIRCLE_WORKFLOW_ID"
+          docker push "akshay0/el-patron:$CIRCLE_WORKFLOW_ID"
+  ship-it:
+    docker:
+    - image: docker:stable
+    steps:
+    - checkout
+    - setup_remote_docker
+    - run:
+        name: Create final docker image
+        command: |
+          set -e
 
+          version=$(cat package.yaml| grep '^version' | awk '{print $2}' | xargs echo)
+
+          docker login -u $DOCKER_USER -p $DOCKER_PASS
+          docker pull "akshay0/el-patron:$CIRCLE_WORKFLOW_ID"
+          docker tag "akshay0/el-patron:$CIRCLE_WORKFLOW_ID" "akshay0/el-patron:$version"
+          docker push "akshay0/el-patron:$version"
 workflows:
   version: 2
   build:
@@ -121,3 +139,10 @@ workflows:
         requires:
         - build-elm
         - build-haskell
+    - set-sail:
+        type: approval
+        requires:
+        - add-compiled-elm-to-docker-image
+    - ship-it:
+        requires:
+        - set-sail
