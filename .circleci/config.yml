@@ -129,6 +129,8 @@ jobs:
           docker pull "akshay0/el-patron:$CIRCLE_WORKFLOW_ID"
           docker tag "akshay0/el-patron:$CIRCLE_WORKFLOW_ID" "akshay0/el-patron:$version"
           docker push "akshay0/el-patron:$version"
+          git tag "v$version"
+          git push --tags
 workflows:
   version: 2
   build:
