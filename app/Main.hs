@@ -1,12 +1,16 @@
 {-# LANGUAGE RecordWildCards #-}
-import           Application               (cloneRepository, makeApplication)
-import qualified Data.Attoparsec.Text      as A
-import           Data.Semigroup            ((<>))
-import           Data.Text                 (pack)
+{-# LANGUAGE TemplateHaskell #-}
+import           Application                (cloneRepository, makeApplication)
+import qualified Data.Attoparsec.Text       as A
+import           Data.Semigroup             ((<>))
+import           Data.Text                  (pack)
+import           Data.Version
 import           Lostation
-import           Network.Wai.Handler.Warp  (run)
+import           Network.Wai.Handler.Warp   (run)
 import           Options.Applicative
+import           Options.Applicative.Simple (simpleOptions, simpleVersion)
 import           Options.Applicative.Types
+import           Paths_el_patron            as Meta
 import           Settings
 import           Yesod.Core
 
@@ -68,15 +72,16 @@ options = Options
      <> value 3000
      <> showDefault
      <> short 'p'
-     <> help "Port to run El Patrón" )
+     <> help "Port to run El Patrón")
 
 main :: IO ()
 main = do
-  opts <- execParser optsParser
+  (opts, ()) <- simpleOptions
+                  $(simpleVersion Meta.version)
+                  "El Patrón"
+                  "Runs El Patrón"
+                  options
+                  empty
   cloneRepository $ makeSettings opts
   app <- makeApplication $ makeSettings opts
   run (port opts) app
-  where
-    optsParser = info (options <**> helper)
-      ( fullDesc
-     <> progDesc "Runs El Patrón API service" )
