@@ -7,4 +7,4 @@ env:
  REMOTE: <YOUR LOCKS REPO REMOTE>
  TEAMS: <COMMA_SEPARATED_TEAMS>
 docker:
- image: akshay0/el-patron:latest
+ image: akshay0/el-patron:1.0.0
