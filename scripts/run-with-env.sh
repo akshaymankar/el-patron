@@ -16,7 +16,7 @@ for t in "${teams_arr[@]}"; do
   teams_vars+=("--authorized-team=$t")
 done
 
-echo el-patron \
+el-patron \
   -p "$PORT" \
   --github-client-id "$GITHUB_CLIENT_ID" \
   --github-client-secret "$GITHUB_CLIENT_SECRET" \
