@@ -33,7 +33,7 @@ helm install deploy/kubernetes/helm/el-patron --namespace el-patron -f el-patron
 ## Run locally
 
 1. Install [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
-1. Install [elm] (https://guide.elm-lang.org/install.html)
+1. Install [elm](https://guide.elm-lang.org/install.html)
 1. Install [create-elm-app](https://github.com/halfzebra/create-elm-app)
 1. Clone the code
 1. Build elm code
