@@ -60,7 +60,7 @@ type alias Flags =
 
 
 type alias Model =
-    { flags : Flags, pools : Pools, loading : Bool, githubToken : Maybe String }
+    { flags : Flags, pools : Pools, loading : Bool }
 
 
 type Msg
@@ -79,5 +79,4 @@ initialModel =
     { flags = {}
     , pools = []
     , loading = True
-    , githubToken = Nothing
     }
