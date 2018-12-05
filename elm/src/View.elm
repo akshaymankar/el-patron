@@ -73,8 +73,7 @@ lockActionButton f pool lock =
         action =
             lockAction pool lock
     in
-    a [ href "#", onClick (PerformLockAction action) ] [ text (toSymbol action) ]
-
+    text "Locks can only be viewed. To Claim/Unclaim please ping the PKS-RelEng team"
 
 lockedBy : LockOwner -> String
 lockedBy o =
