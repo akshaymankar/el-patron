@@ -59,8 +59,14 @@ type alias Flags =
     {}
 
 
+type LoadingState
+    = Loading
+    | Loaded
+    | LoadingFailed String
+
+
 type alias Model =
-    { flags : Flags, pools : Pools, loading : Bool }
+    { flags : Flags, pools : Pools, loadingState : LoadingState }
 
 
 type Msg
@@ -78,5 +84,5 @@ initialModel : Model
 initialModel =
     { flags = {}
     , pools = []
-    , loading = True
+    , loadingState = Loading
     }

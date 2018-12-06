@@ -36,12 +36,12 @@ makeApplication s = do
 
 cloneRepository :: Settings -> IO ()
 cloneRepository settings =  do
-  tmpDirExists <- doesPathExist tmpDir
-  if tmpDirExists
-     then removeDirectoryRecursive tmpDir
-     else print $ tmpDir ++ " doesn't exist"
-  _ <- execGit [ "clone"
-               , "-c", "core.sshCommand" `T.append` "=ssh -i " `T.append` privateKeyFile settings
-               , "--separate-git-dir", T.pack gitDir
-               , lockRepoRemote settings, T.pack locksRepoFile]
+  -- tmpDirExists <- doesPathExist tmpDir
+  -- if tmpDirExists
+  --    then removeDirectoryRecursive tmpDir
+  --    else print $ tmpDir ++ " doesn't exist"
+  -- _ <- execGit [ "clone"
+  --              , "-c", "core.sshCommand" `T.append` "=ssh -i " `T.append` privateKeyFile settings
+  --              , "--separate-git-dir", T.pack gitDir
+  --              , lockRepoRemote settings, T.pack locksRepoFile]
   return ()

@@ -7,9 +7,9 @@ import Git.CmdLine
 import Git.Types
 import Shelly
 
---locksPath = "/Users/axeman/work/kubo/kubo-locks"
+locksPath = "/Users/axeman/work/kubo/kubo-locks"
 tmpDir = "/tmp/gaffer"
-locksPath = tmpDir ++ "/locks"
+-- locksPath = tmpDir ++ "/locks"
 gitDir = tmpDir ++ "/git"
 locksRepoFile = tmpDir ++ "/locks-repo-file"
 

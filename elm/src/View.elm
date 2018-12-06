@@ -157,8 +157,13 @@ poolsView model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div [ classList [ ( "loader-wrapper", True ), ( "hidden", not model.loading ) ] ]
-            [ div [ class "lds-ring" ] [ div [] [] ] ]
-        , div [ class "masonry" ] (poolsView model)
-        ]
+    case model.loadingState of
+        LoadingFailed e ->
+            div [] [ p [] [ text ("failures! " ++ e) ] ]
+
+        _ ->
+            div []
+                [ div [ classList [ ( "loader-wrapper", True ), ( "hidden", model.loadingState /= Loading ) ] ]
+                    [ div [ class "lds-ring" ] [ div [] [] ] ]
+                , div [ class "masonry" ] (poolsView model)
+                ]

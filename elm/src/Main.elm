@@ -80,7 +80,7 @@ update msg model =
             model ! []
 
         NewLocks (Ok newLocks) ->
-            { model | pools = newLocks, loading = False } ! []
+            { model | pools = newLocks, loadingState = Loaded } ! []
 
         NewLocks (Err (Http.BadStatus r)) ->
             if r.status.code == 403 then
@@ -89,18 +89,19 @@ update msg model =
                         ( model, load (authUrl model.flags) )
 
                     Ok (ErrorMessage e) ->
-                        crash e
+                        { model | loadingState = LoadingFailed e } ! []
 
                     Err _ ->
                         crash "failed to error!"
             else
-                crash ("Failed to get locks with code: " ++ r.status.message)
+                { model | loadingState = LoadingFailed r.status.message } ! []
 
+        -- crash ("Failed to get locks with code: " ++ r.status.message)
         NewLocks (Err x) ->
             crash ("Failed to get locks!" ++ toString x)
 
         PerformLockAction a ->
-            ( { model | loading = True }, performLockAction model.flags a )
+            ( { model | loadingState = Loading }, performLockAction model.flags a )
 
         LockActionDone (Ok _) ->
             ( model, updateLocks model )
