@@ -67,8 +67,8 @@ toSymbol a =
             ""
 
 
-lockActionButton : Flags -> Pool -> Lock -> Html Msg
-lockActionButton f pool lock =
+lockActionButton : Pool -> Lock -> Html Msg
+lockActionButton pool lock =
     let
         action =
             lockAction pool lock
@@ -126,33 +126,45 @@ lockedSinceText lock =
             lockedSinceElement w.sinceStr
 
 
-lockView : Flags -> Pool -> Lock -> Html Msg
-lockView f pool lock =
+lockTextAndMaybeButton : Config -> Pool -> Lock -> List (Html Msg)
+lockTextAndMaybeButton c pool lock =
+    let
+        lt =
+            span [] [ lockText lock ]
+    in
+    if c.disableActionButtons then
+        [ lt
+        , span [] [ text " - " ]
+        , span [] [ lockActionButton pool lock ]
+        ]
+    else
+        [ lt ]
+
+
+lockView : Config -> Pool -> Lock -> Html Msg
+lockView c pool lock =
     div [ lockClasses lock ]
         [ p
             [ class "lock-name" ]
-            [ span [] [ lockText lock ]
-            , span [] [ text " - " ]
-            , span [] [ lockActionButton f pool lock ]
-            ]
+            (lockTextAndMaybeButton c pool lock)
         , lockedByText lock
         , lockedSinceText lock
         ]
 
 
-locksView : Flags -> Pool -> List Lock -> Html Msg
-locksView f pool locks =
-    div [] (List.map (lockView f pool) locks)
+locksView : Config -> Pool -> List Lock -> Html Msg
+locksView c pool locks =
+    div [] (List.map (lockView c pool) locks)
 
 
-poolView : Flags -> ( Pool, List Lock ) -> Html Msg
-poolView f ( pool, locks ) =
-    div [ class "item" ] [ p [ class "pool" ] [ text pool.name ], locksView f pool locks ]
+poolView : Config -> ( Pool, List Lock ) -> Html Msg
+poolView c ( pool, locks ) =
+    div [ class "item" ] [ p [ class "pool" ] [ text pool.name ], locksView c pool locks ]
 
 
 poolsView : Model -> List (Html Msg)
 poolsView model =
-    List.map (poolView model.flags) model.pools
+    List.map (poolView model.config) model.pools
 
 
 view : Model -> Html Msg

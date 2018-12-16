@@ -17,8 +17,9 @@ import           System.Directory
 import           Yesod.Auth
 import           Yesod.Core
 
-import           Handler.Authenticated
-import           Handler.Locks
+import Handler.Authenticated
+import Handler.Config
+import Handler.Locks
 
 mkYesodDispatch "App" resourcesApp
 
@@ -31,7 +32,7 @@ mapRootToIndexHtml _ p     = Nothing
 makeApplication :: Settings -> IO Application
 makeApplication s = do
   man <- newManager
-  app <- toWaiApp $ App man (S.githubOAuthKeys s) (S.authorizedTeams s)
+  app <- toWaiApp $ App man (S.githubOAuthKeys s) (S.authorizedTeams s) (S.disableActionButtons s)
   return $ elmMiddleWare (compiledElmFiles s) app
 
 cloneRepository :: Settings -> IO ()

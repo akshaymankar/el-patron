@@ -123,3 +123,9 @@ decodePool =
 decodeErrorMessage : Decoder ErrorMessage
 decodeErrorMessage =
     decode ErrorMessage |> required "message" string
+
+
+decodeConfig : Decoder Config
+decodeConfig =
+    decode Config
+        |> required "disableActionButtons" bool

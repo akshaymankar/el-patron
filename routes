@@ -4,3 +4,4 @@
 /pools/#String/locks/#String/unclaim  UnclaimLockR    POST
 /pools/#String/locks/#String/recycle  RecycleLockR    POST
 /authenticated                        AuthenticatedR  GET
+/config                               ConfigR         GET

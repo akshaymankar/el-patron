@@ -14,13 +14,14 @@ import           Paths_el_patron            as Meta
 import           Settings
 import           Yesod.Core
 
-data Options = Options { remote             :: String
-                       , privateKeyFile     :: String
-                       , githubClientID     :: String
-                       , githubClientSecret :: String
-                       , authorizedTeams    :: [GithubTeam]
-                       , compiledElmFiles   :: String
-                       , port               :: Int
+data Options = Options { remote               :: String
+                       , privateKeyFile       :: String
+                       , githubClientID       :: String
+                       , githubClientSecret   :: String
+                       , authorizedTeams      :: [GithubTeam]
+                       , compiledElmFiles     :: String
+                       , port                 :: Int
+                       , disableActionButtons :: Bool
                        }
   deriving Show
 
@@ -32,6 +33,7 @@ makeSettings Options{..} =
            (pack githubClientSecret))
            authorizedTeams
            compiledElmFiles
+           disableActionButtons
 
 attoReadM :: A.Parser a -> ReadM a
 attoReadM p = eitherReader (A.parseOnly p . pack)
@@ -73,6 +75,12 @@ options = Options
      <> showDefault
      <> short 'p'
      <> help "Port to run El Patrón")
+  <*> flag True False
+     ( long "disable-action-buttons"
+     -- <> value True
+     <> showDefault
+     <> help "Disable action buttons on locks"
+     )
 
 main :: IO ()
 main = do

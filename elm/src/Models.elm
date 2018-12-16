@@ -59,13 +59,17 @@ type alias Flags =
     {}
 
 
+type alias Config =
+    { disableActionButtons : Bool }
+
+
 type alias Model =
-    { flags : Flags, pools : Pools, loading : Bool }
+    { flags : Flags, pools : Pools, loading : Bool, config : Config }
 
 
 type Msg
     = NoOp
-    | NewLocks (Result Http.Error Pools)
+    | NewLocks (Result Http.Error (Pools, Config))
     | PerformLockAction LockAction
     | LockActionDone (Result Http.Error (List String))
 
@@ -79,4 +83,5 @@ initialModel =
     { flags = {}
     , pools = []
     , loading = True
+    , config = { disableActionButtons = False }
     }

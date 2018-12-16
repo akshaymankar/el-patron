@@ -29,11 +29,12 @@ teamFromString :: String -> Maybe GithubTeam
 teamFromString = undefined
 
 
-data Settings = Settings { lockRepoRemote   :: Text
-                         , privateKeyFile   :: Text
-                         , githubOAuthKeys  :: GithubOAuthKeys
-                         , authorizedTeams  :: [GithubTeam]
-                         , compiledElmFiles :: String
+data Settings = Settings { lockRepoRemote       :: Text
+                         , privateKeyFile       :: Text
+                         , githubOAuthKeys      :: GithubOAuthKeys
+                         , authorizedTeams      :: [GithubTeam]
+                         , compiledElmFiles     :: String
+                         , disableActionButtons :: Bool
                          }
 
 repoOptions = defaultRepositoryOptions { repoPath = gitDir,

@@ -23,9 +23,10 @@ import           Yesod.Core
 import           Yesod.Form
 
 
-data App = App { httpManager     :: Manager
-               , githubOAuthKeys :: GithubOAuthKeys
-               , authorizedTeams :: [GithubTeam]
+data App = App { httpManager          :: Manager
+               , githubOAuthKeys      :: GithubOAuthKeys
+               , authorizedTeams      :: [GithubTeam]
+               , disableActionButtons :: Bool
                }
 
 mkYesodData "App" $(parseRoutesFile "routes")
@@ -38,6 +39,7 @@ instance Yesod App where
   isAuthorized (RecycleLockR _ _) _ = isAuthorizedForLocks
   isAuthorized AuthenticatedR _     = return Authorized
   isAuthorized (AuthR _) _          = return Authorized
+  isAuthorized ConfigR _            = return Authorized
 
 isAuthorizedForLocks :: HandlerFor App AuthResult
 isAuthorizedForLocks = do

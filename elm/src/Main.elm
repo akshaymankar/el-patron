@@ -62,10 +62,13 @@ postWithCreds =
 updateLocks : Model -> Cmd Msg
 updateLocks oldModel =
     let
-        httpRequest d =
+        getLocksRequest d =
             Http.toTask <| getWithCreds (locksUrl oldModel.flags) (decodeModel d)
     in
-    attempt NewLocks (Task.andThen httpRequest Date.now)
+    attempt NewLocks <|
+        Task.map2 (\pools config -> ( pools, config ))
+            (Task.andThen getLocksRequest Date.now)
+            (Http.get configUrl decodeConfig |> Http.toTask)
 
 
 performLockAction : Flags -> LockAction -> Cmd Msg
@@ -79,8 +82,8 @@ update msg model =
         NoOp ->
             model ! []
 
-        NewLocks (Ok newLocks) ->
-            { model | pools = newLocks, loading = False } ! []
+        NewLocks (Ok ( newLocks, newConfig )) ->
+            { model | pools = newLocks, config = newConfig, loading = False } ! []
 
         NewLocks (Err (Http.BadStatus r)) ->
             if r.status.code == 403 then
