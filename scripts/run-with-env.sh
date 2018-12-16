@@ -16,11 +16,17 @@ for t in "${teams_arr[@]}"; do
   teams_vars+=("--authorized-team=$t")
 done
 
+disable_action_buttons_arg=""
+if [[ "$DISABLE_ACTION_BUTTONS" == "TRUE" ]]; then
+  disable_action_buttons_arg="--disable-action-buttons"
+fi
+
 el-patron \
   -p "$PORT" \
   --github-client-id "$GITHUB_CLIENT_ID" \
   --github-client-secret "$GITHUB_CLIENT_SECRET" \
   --private-key /private-key \
   --remote git@github.com:pivotal-cf/pks-releng-ci-locks.git \
+  $disable_action_buttons_arg \
   "${teams_vars[@]}"
 
