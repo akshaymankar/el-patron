@@ -8,4 +8,4 @@ env:
  TEAMS: <COMMA_SEPARATED_TEAMS>
  DISABLE_ACTION_BUTTONS: <TRUE OR FALSE>
 docker:
- image: akshay0/el-patron:1.0.0
+ image: akshay0/el-patron:1.1.0
