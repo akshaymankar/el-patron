@@ -10,3 +10,6 @@ RUN apt-get update && \
 
 RUN git config --global user.email "el-patron@example.com"
 RUN git config --global user.name "el-patron"
+
+ARG EL_PATRON_BINARY
+COPY $EL_PATRON_BINARY /usr/local/bin/el-patron

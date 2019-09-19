@@ -74,12 +74,10 @@ jobs:
         command: stack test
 
     - run:
-        name: Create base image
-        command: docker build --no-cache -t akshay0/el-patron-api-base -f Dockerfile.base .
-
-    - run:
-        name: Build Image
-        command: stack image container
+        name: Build image
+        command: |
+          EL_PATRON_BINARY=$(stack exec which el-patron | sed "s|$PWD/||")
+          docker build --no-cache -t akshay0/el-patron-api --build-arg "EL_PATRON_BINARY=$EL_PATRON_BINARY" .
 
     - run:
         name: Save the docker image
