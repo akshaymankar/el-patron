@@ -56,7 +56,6 @@ spec:
             name: el-patron-secrets
           - mountPath: /root/.ssh/known_hosts
             name: el-patron-secrets
-            readOnly: true
             subPath: known_hosts
           ports:
           - name: http
