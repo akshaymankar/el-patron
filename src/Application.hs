@@ -42,7 +42,7 @@ cloneRepository settings =  do
      then removeDirectoryRecursive tmpDir
      else print $ tmpDir ++ " doesn't exist"
   _ <- execGit [ "clone"
-               , "-c", "core.sshCommand" `T.append` "=ssh -i " `T.append` privateKeyFile settings
+               , "-c", "core.sshCommand" `T.append` "=ssh -o \"CheckHostIP=no\" -i " `T.append` privateKeyFile settings
                , "--separate-git-dir", T.pack gitDir
                , lockRepoRemote settings, T.pack locksRepoFile]
   return ()
