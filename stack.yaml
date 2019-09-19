@@ -70,16 +70,3 @@ extra-deps:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
-docker:
-  enable: false
-  repo: quay.io/haskell_works/stack-build-icu:latest
-  run-args:
-  - --net=bridge
-  - --publish=3000:3000
-
-image:
-  container:
-    base: "akshay0/el-patron-api-base"
-    name: "akshay0/el-patron-api"
-    add:
-      scripts: /scripts
