@@ -33,6 +33,7 @@ authUrl : Flags -> String
 authUrl f =
     "/auth/page/github/forward"
 
+
 configUrl : String
 configUrl =
     "/config"

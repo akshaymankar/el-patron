@@ -1,8 +1,7 @@
-module DateUtils.Duration exposing (ago, agoFromNow)
+module DateUtils.Duration exposing (ago, agoFromNow, diff)
 
-import Date exposing (..)
-import Date.Extra.Duration exposing (..)
-import Task exposing (..)
+import Task
+import Time exposing (posixToMillis)
 
 
 pluralize : Int -> String -> String
@@ -12,25 +11,33 @@ pluralize h singular =
             "1 " ++ singular
 
         n ->
-            toString n ++ " " ++ singular ++ "s"
+            String.fromInt n ++ " " ++ singular ++ "s"
 
 
-ago : DeltaRecord -> String
-ago { year, month, day, hour, minute, second } =
-    if year > 0 then
-        pluralize year "year" ++ " ago"
-    else if month > 0 then
-        pluralize month "month" ++ " ago"
-    else if day > 0 then
-        pluralize day "day" ++ " ago"
-    else if hour > 0 then
-        pluralize hour "hour" ++ " ago"
-    else if minute > 0 then
-        toString minute ++ " min ago"
-    else
+ago : Int -> String
+ago millis =
+    let
+        seconds =
+            millis // 1000
+    in
+    if seconds < 60 then
         "few seconds ago"
 
+    else if seconds < 60 * 60 then
+        String.fromInt (seconds // 60) ++ " min ago"
 
-agoFromNow : Date -> Cmd String
+    else if seconds < 60 * 60 * 24 then
+        pluralize (seconds // (60 * 60)) "hour" ++ " ago"
+
+    else
+        pluralize (seconds // (60 * 60 * 24)) "day" ++ " ago"
+
+
+diff : Time.Posix -> Time.Posix -> Int
+diff t1 t2 =
+    posixToMillis t1 - posixToMillis t2
+
+
+agoFromNow : Time.Posix -> Cmd String
 agoFromNow d =
-    perform identity (Task.map ago (Task.map (diff d) now))
+    Task.perform identity (Task.map ago (Task.map (diff d) Time.now))

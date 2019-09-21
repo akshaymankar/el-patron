@@ -38,6 +38,7 @@ lockAction pool lock =
         Claimed _ ->
             if pool.hasLifecycle then
                 Recycle pool lock
+
             else
                 Unclaim pool lock
 
@@ -80,7 +81,7 @@ lockedBy : LockOwner -> String
 lockedBy o =
     case o of
         Pipeline p ->
-            p.pipeline ++ "/" ++ p.job ++ "#" ++ toString p.buildNumber
+            p.pipeline ++ "/" ++ p.job ++ "#" ++ String.fromInt p.buildNumber
 
         Committer c ->
             c
@@ -137,6 +138,7 @@ lockTextAndMaybeButton c pool lock =
         , span [] [ text " - " ]
         , span [] [ lockActionButton pool lock ]
         ]
+
     else
         [ lt ]
 
@@ -167,10 +169,24 @@ poolsView model =
     List.map (poolView model.config) model.pools
 
 
+errorView : Model -> Html Msg
+errorView model =
+    case model.error of
+        Nothing ->
+            div [] []
+
+        Just (FailedToLoadLocks err) ->
+            div [] [ text <| "Failed to load locks, due to error: " ++ err ]
+
+        Just FailedToDoLockAction ->
+            div [] [ text <| "Failed to fulfill the request, please try again" ]
+
+
 view : Model -> Html Msg
 view model =
     div []
         [ div [ classList [ ( "loader-wrapper", True ), ( "hidden", not model.loading ) ] ]
             [ div [ class "lds-ring" ] [ div [] [] ] ]
+        , div [ class "" ] [ errorView model ]
         , div [ class "masonry" ] (poolsView model)
         ]

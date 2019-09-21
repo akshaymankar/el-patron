@@ -1,10 +1,10 @@
 module DecodersTest exposing (..)
 
-import Date exposing (..)
 import Decoders exposing (..)
 import Expect
 import Json.Decode exposing (..)
 import Test exposing (..)
+import Time exposing (..)
 
 
 all : Test
@@ -181,13 +181,13 @@ all =
    """
 
                         decodedOutput =
-                            decodeString (decodeModel (fromTime 0)) input
+                            decodeString (decodeModel (Time.millisToPosix 0)) input
                     in
                     case decodedOutput of
                         Ok _ ->
                             Expect.pass
 
                         Err err ->
-                            Expect.fail err
+                            Expect.fail (errorToString err)
             ]
         ]

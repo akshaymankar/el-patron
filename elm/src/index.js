@@ -1,6 +1,9 @@
 import './main.css';
 import './masonry.css';
 import './loader.css';
-import { Main } from './Main.elm';
+import { Elm } from './Main.elm';
 
-Main.fullscreen({});
+
+Elm.Main.init({
+    node: document.getElementById('root')
+});

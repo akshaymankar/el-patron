@@ -1,21 +1,21 @@
 module Main exposing (..)
 
-import Date
-import Debug exposing (crash)
+import Browser exposing (..)
+import Browser.Navigation as Nav
 import Decoders exposing (..)
 import Html exposing (..)
 import Http
 import Json.Decode exposing (..)
 import Models exposing (..)
-import Navigation exposing (..)
 import Task exposing (..)
+import Time
 import Urls exposing (..)
 import View exposing (..)
 
 
 main : Program Flags Model Msg
 main =
-    Html.programWithFlags
+    Browser.element
         { init = init
         , view = view
         , update = update
@@ -36,71 +36,151 @@ init f =
 -- UPDATE
 
 
-requestWithCreds : String -> String -> Decoder a -> Http.Request a
+requestWithCreds : String -> String -> Decoder a -> Task BetterHttpError a
 requestWithCreds method url decoder =
-    Http.request
+    Http.riskyTask
         { method = method
         , headers = [ Http.header "Accept" "application/json" ]
         , url = url
         , body = Http.emptyBody
-        , expect = Http.expectJson decoder
+        , resolver = decoderToResolver decoder
         , timeout = Nothing
-        , withCredentials = True
         }
 
 
-getWithCreds : String -> Decoder a -> Http.Request a
+getWithCreds : String -> Decoder a -> Task BetterHttpError a
 getWithCreds =
     requestWithCreds "Get"
 
 
-postWithCreds : String -> Decoder a -> Http.Request a
+postWithCreds : String -> Decoder a -> Task BetterHttpError a
 postWithCreds =
     requestWithCreds "Post"
+
+
+decoderToResolver : Decoder a -> Http.Resolver BetterHttpError a
+decoderToResolver decoder =
+    Http.stringResolver
+        (\response ->
+            case response of
+                Http.BadUrl_ url ->
+                    Err (BadUrl url)
+
+                Http.Timeout_ ->
+                    Err Timeout
+
+                Http.NetworkError_ ->
+                    Err NetworkError
+
+                Http.BadStatus_ metadata body ->
+                    Err (BadStatus metadata body)
+
+                Http.GoodStatus_ metadata body ->
+                    case decodeString decoder body of
+                        Ok value ->
+                            Ok value
+
+                        Err err ->
+                            Err (BadBody (errorToString err))
+        )
+
+
+getTask : String -> Decoder a -> Task BetterHttpError a
+getTask url decoder =
+    Http.task
+        { method = "Get"
+        , headers = []
+        , url = url
+        , body = Http.emptyBody
+        , resolver = decoderToResolver decoder
+        , timeout = Nothing
+        }
 
 
 updateLocks : Model -> Cmd Msg
 updateLocks oldModel =
     let
         getLocksRequest d =
-            Http.toTask <| getWithCreds (locksUrl oldModel.flags) (decodeModel d)
+            getWithCreds (locksUrl oldModel.flags) (decodeModel d)
     in
     attempt NewLocks <|
         Task.map2 (\pools config -> ( pools, config ))
-            (Task.andThen getLocksRequest Date.now)
-            (Http.get configUrl decodeConfig |> Http.toTask)
+            (Task.andThen getLocksRequest Time.now)
+            (getTask configUrl decodeConfig)
 
 
 performLockAction : Flags -> LockAction -> Cmd Msg
 performLockAction f a =
-    Http.send LockActionDone <| postWithCreds (actionUrl f a) (list string)
+    Task.attempt LockActionDone <|
+        postWithCreds (actionUrl f a) (list string)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
         NewLocks (Ok ( newLocks, newConfig )) ->
-            { model | pools = newLocks, config = newConfig, loading = False } ! []
+            ( { model | pools = newLocks, config = newConfig, loading = False }
+            , Cmd.none
+            )
 
-        NewLocks (Err (Http.BadStatus r)) ->
-            if r.status.code == 403 then
-                case decodeString decodeErrorMessage r.body of
+        NewLocks (Err (BadStatus metadata body)) ->
+            if metadata.statusCode == 403 then
+                case decodeString decodeErrorMessage body of
                     Ok (ErrorMessage "Permission Denied. User not logged in.") ->
-                        ( model, load (authUrl model.flags) )
+                        ( model, Nav.load (authUrl model.flags) )
 
-                    Ok (ErrorMessage e) ->
-                        crash e
+                    otherwise ->
+                        ( { model
+                            | error = Just <| FailedToLoadLocks <| "403 Unauthorized: " ++ body
+                            , loading = False
+                          }
+                        , Cmd.none
+                        )
 
-                    Err _ ->
-                        crash "failed to error!"
             else
-                crash ("Failed to get locks with code: " ++ r.status.message)
+                ( { model
+                    | error = Just <| FailedToLoadLocks <| "Bad Status: " ++ String.fromInt metadata.statusCode
+                    , loading = False
+                  }
+                , Cmd.none
+                )
 
-        NewLocks (Err x) ->
-            crash ("Failed to get locks!" ++ toString x)
+        NewLocks (Err (BadBody body)) ->
+            ( { model
+                | error = Just <| FailedToLoadLocks <| "Bad Body: " ++ body
+                , loading = False
+              }
+            , Cmd.none
+            )
+
+        NewLocks (Err NetworkError) ->
+            ( { model
+                | error = Just <| FailedToLoadLocks "Network Error"
+                , loading = False
+              }
+            , Cmd.none
+            )
+
+        NewLocks (Err Timeout) ->
+            ( { model
+                | error = Just <| FailedToLoadLocks "Timed out"
+                , loading = False
+              }
+            , Cmd.none
+            )
+
+        NewLocks (Err (BadUrl url)) ->
+            ( { model
+                | error = Just <| FailedToLoadLocks <| "Bad url: " ++ url ++ ", please report this as a bug"
+                , loading = False
+              }
+            , Cmd.none
+            )
 
         PerformLockAction a ->
             ( { model | loading = True }, performLockAction model.flags a )
@@ -109,7 +189,12 @@ update msg model =
             ( model, updateLocks model )
 
         LockActionDone (Err _) ->
-            crash "Failed to update locks!"
+            ( { model
+                | error = Just FailedToDoLockAction
+                , loading = False
+              }
+            , Cmd.none
+            )
 
 
 

@@ -1,15 +1,15 @@
 module Models exposing (..)
 
-import Date exposing (..)
 import Http exposing (..)
+import Time exposing (..)
 
 
 type alias TimesAndOwner =
-    { since : Date, sinceStr : String, owner : LockOwner }
+    { since : Time.Posix, sinceStr : String, owner : LockOwner }
 
 
 type alias Times =
-    { since : Date, sinceStr : String }
+    { since : Time.Posix, sinceStr : String }
 
 
 type LockState
@@ -63,15 +63,28 @@ type alias Config =
     { disableActionButtons : Bool }
 
 
+type Error
+    = FailedToLoadLocks String
+    | FailedToDoLockAction
+
+
 type alias Model =
-    { flags : Flags, pools : Pools, loading : Bool, config : Config }
+    { flags : Flags, pools : Pools, loading : Bool, config : Config, error : Maybe Error }
+
+
+type BetterHttpError
+    = BadUrl String
+    | Timeout
+    | NetworkError
+    | BadStatus Http.Metadata String
+    | BadBody String
 
 
 type Msg
     = NoOp
-    | NewLocks (Result Http.Error (Pools, Config))
+    | NewLocks (Result BetterHttpError ( Pools, Config ))
     | PerformLockAction LockAction
-    | LockActionDone (Result Http.Error (List String))
+    | LockActionDone (Result BetterHttpError (List String))
 
 
 type ErrorMessage
@@ -84,4 +97,5 @@ initialModel =
     , pools = []
     , loading = True
     , config = { disableActionButtons = False }
+    , error = Nothing
     }

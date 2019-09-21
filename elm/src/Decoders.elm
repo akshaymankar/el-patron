@@ -1,30 +1,31 @@
 module Decoders exposing (..)
 
-import Date exposing (..)
-import Date.Extra.Duration exposing (..)
 import DateUtils.Duration exposing (..)
 import Dict exposing (fromList)
+import Iso8601
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 import Models exposing (..)
+import Parser
+import Time
 
 
-timesAndOwnerDecoder : Date -> Decoder TimesAndOwner
+timesAndOwnerDecoder : Time.Posix -> Decoder TimesAndOwner
 timesAndOwnerDecoder d =
-    decode TimesAndOwner
+    succeed TimesAndOwner
         |> required "since" dateDecoder
         |> required "since" (agoDecoder d)
         |> required "owner" ownerDecoder
 
 
-timesDecoder : Date -> Decoder Times
+timesDecoder : Time.Posix -> Decoder Times
 timesDecoder d =
-    decode Times
+    succeed Times
         |> required "since" dateDecoder
         |> required "since" (agoDecoder d)
 
 
-decodeLockState : Date -> Decoder LockState
+decodeLockState : Time.Posix -> Decoder LockState
 decodeLockState d =
     field "name" string
         |> andThen
@@ -47,21 +48,21 @@ decodeLockState d =
             )
 
 
-dateDecoder : Decoder Date
+dateDecoder : Decoder Time.Posix
 dateDecoder =
     string
         |> Json.Decode.andThen
             (\dateString ->
-                case fromString dateString of
+                case Iso8601.toTime dateString of
                     Ok date ->
                         Json.Decode.succeed date
 
-                    Err errorString ->
-                        Json.Decode.fail errorString
+                    Err deadEnds ->
+                        Json.Decode.fail (Parser.deadEndsToString deadEnds)
             )
 
 
-agoDecoder : Date -> Decoder String
+agoDecoder : Time.Posix -> Decoder String
 agoDecoder d =
     Json.Decode.map (ago << diff d) dateDecoder
 
@@ -74,36 +75,36 @@ ownerDecoder =
                 case t of
                     "Pipeline" ->
                         map Pipeline
-                            (decode PipelineDetails
+                            (succeed PipelineDetails
                                 |> required "pipeline" string
                                 |> required "job" string
                                 |> required "buildNumber" int
                             )
 
                     "Committer" ->
-                        decode Committer |> required "committer" string
+                        succeed Committer |> required "committer" string
 
                     "GafferUser" ->
-                        decode GafferUser |> required "username" string
+                        succeed GafferUser |> required "username" string
 
                     somethingElse ->
                         fail <| "Unknown lock owner type: " ++ somethingElse
             )
 
 
-decodeLock : Date -> Decoder Lock
+decodeLock : Time.Posix -> Decoder Lock
 decodeLock d =
-    decode Lock
+    succeed Lock
         |> required "name" string
         |> required "state" (decodeLockState d)
 
 
-decodeModel : Date -> Decoder Pools
+decodeModel : Time.Posix -> Decoder Pools
 decodeModel d =
     list (decodeTuple d)
 
 
-decodeTuple : Date -> Decoder ( Pool, List Lock )
+decodeTuple : Time.Posix -> Decoder ( Pool, List Lock )
 decodeTuple d =
     map2 makeTuple (index 0 decodePool) (index 1 (list (decodeLock d)))
 
@@ -115,17 +116,17 @@ makeTuple a b =
 
 decodePool : Decoder Pool
 decodePool =
-    decode Pool
+    succeed Pool
         |> required "poolName" string
         |> required "poolHasLifecycle" bool
 
 
 decodeErrorMessage : Decoder ErrorMessage
 decodeErrorMessage =
-    decode ErrorMessage |> required "message" string
+    succeed ErrorMessage |> required "message" string
 
 
 decodeConfig : Decoder Config
 decodeConfig =
-    decode Config
+    succeed Config
         |> required "disableActionButtons" bool
